@@ -75,6 +75,8 @@ install_openssl() {
     export CXXFLAGS="$CFLAGS"
   fi
   cd "$DIR_TMP"
+  mkdir -p stunnel-openssl
+  cd stunnel-openssl
   if [ ! -f "openssl-${STUNNEL_OPENSSLVER}.tar.gz" ]; then
     wget "https://www.openssl.org/source/openssl-${STUNNEL_OPENSSLVER}.tar.gz"
   fi
@@ -87,7 +89,7 @@ install_openssl() {
   CXXFLAGS="$CFLAGS"
   ./config $CFLAGS -Wl,--enable-new-dtags,-rpath=${s_openssldir}/lib --prefix=${s_openssldir} --openssldir=${s_openssldir} shared enable-ec_nistp_64_gcc_128 enable-tls1_3
   make -j$(nproc)
-  make certs
+  # make certs
   make install
 }
 
