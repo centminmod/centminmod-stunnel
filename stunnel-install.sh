@@ -78,6 +78,7 @@ install_openssl() {
   mkdir -p stunnel-openssl
   cd stunnel-openssl
   if [ ! -f "openssl-${STUNNEL_OPENSSLVER}.tar.gz" ]; then
+    echo "wget "https://www.openssl.org/source/openssl-${STUNNEL_OPENSSLVER}.tar.gz""
     wget "https://www.openssl.org/source/openssl-${STUNNEL_OPENSSLVER}.tar.gz"
   fi
   rm -rf "openssl-${STUNNEL_OPENSSLVER}"
@@ -257,9 +258,10 @@ install_stunnel() {
   fi
   cd "$DIR_TMP"
   if [ ! -f "stunnel-${STUNNEL_VERSION}.tar.gz" ]; then
+    echo "wget "https://www.stunnel.org/downloads/beta/stunnel-${STUNNEL_VERSION}.tar.gz""
     wget "https://www.stunnel.org/downloads/beta/stunnel-${STUNNEL_VERSION}.tar.gz"
   fi
-  rm -rf "stunnel-${STUNNEL_VERSION}.tar.gz"
+  rm -rf "stunnel-${STUNNEL_VERSION}"
   tar xzf "stunnel-${STUNNEL_VERSION}.tar.gz"
   cd stunnel-5.45
   make clean; make distclean
