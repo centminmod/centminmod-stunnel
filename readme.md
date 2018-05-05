@@ -97,3 +97,16 @@ Certificate:
          91:02:21:00:88:ce:69:00:dc:41:7a:e4:8c:cb:2b:d6:f3:8d:
          01:fb:f5:1b:ea:fe:94:28:ae:d2:a5:a0:51:fa:0b:61:58:0f
 ```
+
+# Redis Install On Centmin Mod LEMP stack
+
+Default stunnel.conf sets up a Redis profile. So Redis server can be installed from Remi YUM repository using [custom Redis installer](https://github.com/centminmod/centminmod-redis) written for Centmin Mod LEMP stacks and implements the basic Redis server install steps outlined [here](https://community.centminmod.com/threads/how-to-install-redis-server-on-centmin-mod-lemp-stack.4546/).
+
+```
+mkdir -p /root/tools
+cd /root/tools
+git clone https://github.com/centminmod/centminmod-redis
+cd centminmod-redis
+if [ ! -f /usr/bin/redis-server ]; then ./redis-install.sh install; fi
+service redis restart
+```
