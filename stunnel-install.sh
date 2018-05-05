@@ -15,7 +15,7 @@
 #########################################################
 # variables
 #############
-VER='0.1'
+VER='0.2'
 DT=$(date +"%d%m%y-%H%M%S")
 DIR_TMP='/svr-setup'
 
@@ -33,6 +33,7 @@ STUNNEL_FD='1048576'
 STUNNEL_LIBDIR='/opt/stunnel-dep'
 # openssl 1.1.1 version
 STUNNEL_OPENSSLVER='1.1.1-pre6'
+STUNNEL_OPENSSLTLSTHREE='n'
 # GCC 7.2.1 compile as march=native or march=x86-64
 # default x86-64
 MARCH_TARGETNATIVE='n'
@@ -88,7 +89,11 @@ install_openssl() {
   s_openssldir="$STUNNEL_LIBDIR"
   CFLAGS="-march=${MARCH_TARGET} -fuse-ld=gold${EXTRA_CFLAGS}"
   CXXFLAGS="$CFLAGS"
-  ./config $CFLAGS -Wl,--enable-new-dtags,-rpath=${s_openssldir}/lib --prefix=${s_openssldir} --openssldir=${s_openssldir} shared enable-ec_nistp_64_gcc_128 enable-tls1_3
+  if [ "$STUNNEL_OPENSSLTLSTHREE" = [yY] ]; then
+    ./config $CFLAGS -Wl,--enable-new-dtags,-rpath=${s_openssldir}/lib --prefix=${s_openssldir} --openssldir=${s_openssldir} shared enable-ec_nistp_64_gcc_128 enable-tls1_3
+  else
+    ./config $CFLAGS -Wl,--enable-new-dtags,-rpath=${s_openssldir}/lib --prefix=${s_openssldir} --openssldir=${s_openssldir} shared enable-ec_nistp_64_gcc_128
+  fi
   make -j$(nproc)
   # make certs
   make install
@@ -108,6 +113,8 @@ sslVersion = TLSv1.2
 
 setuid = stunnel
 setgid = stunnel
+ciphers = HIGH:!DH:!aNULL:!SSLv2:!SSLv3
+options = NO_SSLv3
 socket = l:TCP_NODELAY=1
 socket = r:TCP_NODELAY=1
 socket = l:SO_KEEPALIVE=1
@@ -118,9 +125,8 @@ client = no
 #foreground = yes
 accept = 7379
 connect = 127.0.0.1:6379
-cert = /etc/stunnel/server.crt
-key = /etc/stunnel/server.key
-CAfile = /etc/stunnel/server.pem
+cert = /etc/pki/tls/certs/stunnel.pem
+CAfile = /etc/pki/tls/certs/stunnel.pem
 verify = 3
 sessionCacheSize = 10000
 sessionCacheTimeout = 10
@@ -138,6 +144,8 @@ sslVersion = TLSv1.2
 
 setuid = stunnel
 setgid = stunnel
+ciphers = HIGH:!DH:!aNULL:!SSLv2:!SSLv3
+options = NO_SSLv3
 socket = l:TCP_NODELAY=1
 socket = r:TCP_NODELAY=1
 socket = l:SO_KEEPALIVE=1
@@ -148,9 +156,8 @@ client = yes
 #foreground = yes
 accept = 127.0.0.1:8379
 connect = ${REDIS_REMOTEIP:-REDIS_REMOTEIP}:7379
-cert = /etc/stunnel/client.crt
-key = /etc/stunnel/client.key
-CAfile = /etc/stunnel/server.pem
+cert = /etc/pki/tls/certs/stunnel.pem
+CAfile = /etc/pki/tls/certs/stunnel.pem
 verify = 3
 sessionCacheSize = 10000
 sessionCacheTimeout = 10
@@ -231,6 +238,11 @@ setup_stunnel() {
     popd
     echo "created rsa based /etc/pki/tls/certs/stunnel.pem"
   fi
+  # Create dhparam
+  echo
+  echo "openssl dhparam -out dhparam.pem 2048"
+  openssl dhparam -out dhparam.pem 2048
+  cat dhparam.pem >> stunnel.pem
   echo
   echo "check /etc/pki/tls/certs/stunnel.pem"
   echo "openssl x509 -in /etc/pki/tls/certs/stunnel.pem -text -noout"
@@ -245,8 +257,10 @@ setup_stunnel() {
   if [ -f /usr/bin/redis-cli ]; then
     echo
     echo "Check Redis profile connection"
-    echo "openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/stunnel/server.pem -cert /etc/stunnel/server.crt -key /etc/stunnel/server.key"
-    openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/stunnel/server.pem -cert /etc/stunnel/server.crt -key /etc/stunnel/server.key
+    # echo "echo -n | /opt/stunnel-dep/bin/openssl -CAfile /etc/stunnel/server.pem -cert /etc/stunnel/server.crt -key /etc/stunnel/server.key"
+    # echo -n | /opt/stunnel-dep/bin/openssl -CAfile /etc/stunnel/server.pem -cert /etc/stunnel/server.crt -key /etc/stunnel/server.key
+    echo "echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/pki/tls/certs/stunnel.pem"
+    echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/pki/tls/certs/stunnel.pem
   fi
   echo
   systemctl status stunnelx.service
