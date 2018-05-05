@@ -97,24 +97,27 @@ setup_configfile() {
   if [[ "$STUNNEL_CLIENT" = [nN] ]]; then
 # server config
 cat > /etc/stunnel/stunnel.conf <<EOF
-client = no
 chroot = /var/run/stunnel
 cert = /etc/pki/tls/certs/stunnel.pem
 pid = /stunnel.pid
 #output = /var/log/stunnel.log
 output = /stunnel.log
+sslVersion = TLSv1.2
 
 setuid = stunnel
 setgid = stunnel
 socket = l:TCP_NODELAY=1
 socket = r:TCP_NODELAY=1
+socket = l:SO_KEEPALIVE=1
+socket = r:SO_KEEPALIVE=1
 
-[redis]
+[redis-server]
+client = no
 accept = 7379
 connect = 127.0.0.1:6379
 cert = /etc/stunnel/server.crt
 key = /etc/stunnel/server.key
-CAfile = /etc/stunnel/client.crt
+CAfile = /etc/stunnel/server.pem
 verify = 3
 sessionCacheSize = 10000
 sessionCacheTimeout = 10
@@ -122,24 +125,27 @@ EOF
   elif [[ "$STUNNEL_CLIENT" = [yY] ]]; then
 # client config
 cat > /etc/stunnel/stunnel.conf <<EOF
-client = yes
 chroot = /var/run/stunnel
 cert = /etc/pki/tls/certs/stunnel.pem
 pid = /stunnel.pid
 #output = /var/log/stunnel.log
 output = /stunnel.log
+sslVersion = TLSv1.2
 
 setuid = stunnel
 setgid = stunnel
 socket = l:TCP_NODELAY=1
 socket = r:TCP_NODELAY=1
+socket = l:SO_KEEPALIVE=1
+socket = r:SO_KEEPALIVE=1
 
-[redis]
+[redis-client]
+client = yes
 accept = 127.0.0.1:8379
 connect = ${REDIS_REMOTEIP:-REDIS_REMOTEIP}:7379
 cert = /etc/stunnel/client.crt
 key = /etc/stunnel/client.key
-CAfile = /etc/stunnel/server.crt
+CAfile = /etc/stunnel/server.pem
 verify = 3
 sessionCacheSize = 10000
 sessionCacheTimeout = 10
@@ -155,22 +161,36 @@ setup_peercerts() {
     openssl req -new -x509 -nodes -days 3650 -key server.key -out server.crt -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
     openssl x509 -in server.crt -text -noout
     chmod 0600 server.key
+    cat server.key > server.pem
+    echo "" >> server.pem
+    cat server.crt >> server.pem
+
     # client
     openssl ecparam -out client.key -name prime256v1 -genkey
     openssl req -new -x509 -nodes -days 3650 -key client.key -out client.crt -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
     openssl x509 -in client.crt -text -noout
     chmod 0600 client.key
+    cat client.key > client.pem
+    echo "" >> client.pem
+    cat client.crt >> client.pem
   else
     # server
     openssl genrsa -out server.key 2048
     openssl req -new -x509 -nodes -days 3650 -key server.key -out server.crt -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
     openssl x509 -in server.crt -text -noout
     chmod 0600 server.key
+    cat server.key > server.pem
+    echo "" >> server.pem
+    cat server.crt >> server.pem
+
     # client
     openssl genrsa -out client.key 2048
     openssl req -new -x509 -nodes -days 3650 -key client.key -out client.crt -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
     openssl x509 -in client.crt -text -noout
     chmod 0600 client.key
+    cat client.key > client.pem
+    echo "" >> client.pem
+    cat client.crt >> client.pem
   fi
   popd
 }
@@ -185,10 +205,10 @@ setup_stunnel() {
     openssl req -new -x509 -nodes -days ${STUNNEL_CERTEXPIRY} -key stunnel.key -out stunnel.crt -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
     openssl x509 -in stunnel.crt -text -noout
     chmod 0600 stunnel.key
-    cat stunnel.key >  stunnel.pem
+    cat stunnel.key > stunnel.pem
     echo "" >> stunnel.pem
     cat stunnel.crt >> stunnel.pem
-    rm -f stunnel.key stunnel.crt
+    # rm -f stunnel.key stunnel.crt
     popd
     echo "created ecdsa based /etc/pki/tls/certs/stunnel.pem"
   else
@@ -196,13 +216,13 @@ setup_stunnel() {
     echo "creating rsa based /etc/pki/tls/certs/stunnel.pem"
     pushd /etc/pki/tls/certs/
     umask 77
-    PEM1=`/bin/mktemp /tmp/openssl.XXXXXX`
-    PEM2=`/bin/mktemp /tmp/openssl.XXXXXX`
+    PEM1='stunnel.key'
+    PEM2='stunnel.crt'
     openssl req -newkey rsa:2048 -keyout $PEM1 -nodes -x509 -days ${STUNNEL_CERTEXPIRY} -out $PEM2 -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
-    cat $PEM1 >  stunnel.pem
+    cat $PEM1 > stunnel.pem
     echo "" >> stunnel.pem
     cat $PEM2 >> stunnel.pem
-    rm -f $PEM1 $PEM2
+    # rm -f $PEM1 $PEM2
     popd
     echo "created rsa based /etc/pki/tls/certs/stunnel.pem"
   fi
@@ -217,6 +237,12 @@ setup_stunnel() {
   systemctl daemon-reload
   systemctl restart stunnelx.service
   systemctl enable stunnelx.service
+  if [ -f /usr/bin/redis-cli ]; then
+    echo
+    echo "Check Redis profile connection"
+    echo "openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/stunnel/server.pem -cert /etc/stunnel/server.crt -key /etc/stunnel/server.key"
+    openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/stunnel/server.pem -cert /etc/stunnel/server.crt -key /etc/stunnel/server.key
+  fi
   echo
   systemctl status stunnelx.service
   echo

@@ -110,3 +110,29 @@ cd centminmod-redis
 if [ ! -f /usr/bin/redis-server ]; then ./redis-install.sh install; fi
 service redis restart
 ```
+
+Redis server on local port 6379
+
+```
+redis-cli -h 127.0.0.1 -p 6379 info server
+# Server
+redis_version:4.0.9
+redis_git_sha1:00000000
+redis_git_dirty:0
+redis_build_id:8e246a05989e6d22
+redis_mode:standalone
+os:Linux 2.6.32-042stab116.1 x86_64
+arch_bits:64
+multiplexing_api:epoll
+atomicvar_api:atomic-builtin
+gcc_version:4.8.5
+process_id:32590
+run_id:a868f5947d3936cc4d5723a9364de22d26cf6eb2
+tcp_port:6379
+uptime_in_seconds:100
+uptime_in_days:0
+hz:10
+lru_clock:15560505
+executable:/usr/bin/redis-server
+config_file:/etc/redis.conf
+```
