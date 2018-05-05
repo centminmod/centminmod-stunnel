@@ -103,6 +103,7 @@ cert = /etc/pki/tls/certs/stunnel.pem
 pid = /stunnel.pid
 #output = /var/log/stunnel.log
 output = /stunnel.log
+#debug = 7
 sslVersion = TLSv1.2
 
 setuid = stunnel
@@ -114,6 +115,7 @@ socket = r:SO_KEEPALIVE=1
 
 [redis-server]
 client = no
+#foreground = yes
 accept = 7379
 connect = 127.0.0.1:6379
 cert = /etc/stunnel/server.crt
@@ -131,6 +133,7 @@ cert = /etc/pki/tls/certs/stunnel.pem
 pid = /stunnel.pid
 #output = /var/log/stunnel.log
 output = /stunnel.log
+#debug = 7
 sslVersion = TLSv1.2
 
 setuid = stunnel
@@ -142,6 +145,7 @@ socket = r:SO_KEEPALIVE=1
 
 [redis-client]
 client = yes
+#foreground = yes
 accept = 127.0.0.1:8379
 connect = ${REDIS_REMOTEIP:-REDIS_REMOTEIP}:7379
 cert = /etc/stunnel/client.crt
