@@ -8,14 +8,14 @@
 # ecdsa instead of rsa based ssl certificates for better
 # scalability and performance out of the box
 #
-# stunnel & openssl 1.1.1 are compiled against GCC 7.2.1 
+# stunnel & openssl 1.1.1 are compiled against GCC 7.2.1
 # compiler with Gold linker if detected on the server
 #
 # written by George Liu (eva2000) https://centminmod.com
 #########################################################
 # variables
 #############
-VER='0.3'
+VER='0.4'
 DT=$(date +"%d%m%y-%H%M%S")
 DIR_TMP='/svr-setup'
 
@@ -354,6 +354,10 @@ case $1 in
     echo
     systemctl status stunnelx.service
     ;;
+  update-certs )
+    setup_peercerts
+    setup_stunnel
+    ;;
   reinstall )
     install_openssl
     install_stunnel
@@ -371,7 +375,7 @@ case $1 in
   * )
     echo
     echo "Usage:"
-    echo "$0 {install|update|reinstall|check|openssl"
+    echo "$0 {install|update|update-certs|reinstall|check|openssl"
     echo
     ;;
 esac

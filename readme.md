@@ -2,6 +2,15 @@ stunnel install for CentOS 7 based [Centmin Mod LEMP stacks](https://centminmod.
 
 * custom ECC 256bit ECDSA ssl certificated based stunnel installation compiled against OpenSSL 1.1.1 using GCC 7.2.1 compiler with Gold linker
 
+Usage
+
+```
+./stunnel-install.sh 
+
+Usage:
+./stunnel-install.sh {install|update|update-certs|reinstall|check|openssl
+```
+
 ```
 systemctl status stunnelx
 * stunnelx.service - TLS tunnel for network daemons
@@ -185,7 +194,7 @@ SET: 675219.50 requests per second
 GET: 827814.62 requests per second
 ```
 
-Redis via stunnel port 8379
+Redis via stunnel port 8379 with ECC 256bit ECDSA SSL certs and TLS 1.2
 
 ```
 redis-benchmark -h 127.0.0.1 -p 8379 -n 1000000 -t set,get -P 32 -q -c 200
@@ -197,8 +206,24 @@ SET: 128600.82 requests per second
 GET: 171791.78 requests per second
 
 redis-benchmark -h 127.0.0.1 -p 8379 -n 1000000 -t set,get -P 32 -q -c 200
-SET: 121906.62 requests per second
-GET: 132872.70 requests per second
+SET: 182016.75 requests per second
+GET: 156494.53 requests per second
+```
+
+Redis via stunnel port 8379 with RSA 2048bit Standard SSL certs and TLS 1.2
+
+```
+redis-benchmark -h 127.0.0.1 -p 8379 -n 1000000 -t set,get -P 32 -q -c 200
+SET: 117980.18 requests per second
+GET: 129684.87 requests per second
+
+redis-benchmark -h 127.0.0.1 -p 8379 -n 1000000 -t set,get -P 32 -q -c 200
+SET: 129416.33 requests per second
+GET: 170823.36 requests per second
+
+redis-benchmark -h 127.0.0.1 -p 8379 -n 1000000 -t set,get -P 32 -q -c 200
+SET: 170357.75 requests per second
+GET: 161655.36 requests per second
 ```
 
 ## Redis Server Background Specs
