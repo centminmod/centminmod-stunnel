@@ -313,6 +313,7 @@ setup_stunnel() {
 
 install_jemalloc() {
   if [[ "$STUNNEL_JEMALLOC" = [yY] ]]; then
+    echo
     cd "$DIR_TMP"
     if [ ! -f "jemalloc-${STUNNEL_JEMALLOCVER}.tar.gz" ]; then
       echo "wget https://github.com/jemalloc/jemalloc/archive/${STUNNEL_JEMALLOCVER}.tar.gz -O jemalloc-${STUNNEL_JEMALLOCVER}.tar.gz"
@@ -325,8 +326,8 @@ install_jemalloc() {
     export CXX="g++"
     make clean; make distclean
     ./autogen.sh
-    echo "./configure --disable-cxx --prefix=${STUNNEL_LIBDIR} --libdir=${STUNNEL_LIBDIR}/lib --includedir=${STUNNEL_LIBDIR}/include"
-    ./configure --disable-cxx --prefix=${STUNNEL_LIBDIR} --libdir=${STUNNEL_LIBDIR}/lib --includedir=${STUNNEL_LIBDIR}/include
+    echo "./configure --disable-cxx --prefix=${STUNNEL_LIBDIR} --libdir=${STUNNEL_LIBDIR}/lib --includedir=${STUNNEL_LIBDIR}/include --with-version=${STUNNEL_JEMALLOCVER}-0-g1"
+    ./configure --disable-cxx --prefix=${STUNNEL_LIBDIR} --libdir=${STUNNEL_LIBDIR}/lib --includedir=${STUNNEL_LIBDIR}/include --with-version=${STUNNEL_JEMALLOCVER}-0-g1
     # make -j$(nproc)
     make -j$(nproc) build_lib_shared
     make -j$(nproc) build_lib_static
@@ -337,6 +338,9 @@ install_jemalloc() {
     make install_include
     make install_bin
     make install_lib_pc
+    echo "/opt/stunnel-dep/bin/jemalloc-config --version"
+    /opt/stunnel-dep/bin/jemalloc-config --version
+    echo
   fi
 }
 
