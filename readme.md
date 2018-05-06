@@ -388,6 +388,22 @@ SET: 191644.31 requests per second
 GET: 190041.81 requests per second
 ```
 
+With `SO_REUSEADDR=yes` Redis via stunnel port 8379 with ECC 256bit ECDSA SSL certs and `TLS 1.3` - `AES 256bit`
+
+```
+redis-benchmark -h 127.0.0.1 -p 8379 -n 1000000 -t set,get -P 32 -q -c 200        
+SET: 153633.44 requests per second
+GET: 193311.44 requests per second
+
+redis-benchmark -h 127.0.0.1 -p 8379 -n 1000000 -t set,get -P 32 -q -c 200
+SET: 200561.56 requests per second
+GET: 181290.80 requests per second
+
+redis-benchmark -h 127.0.0.1 -p 8379 -n 1000000 -t set,get -P 32 -q -c 200
+SET: 199760.28 requests per second
+GET: 191168.03 requests per second
+```
+
 ## Redis Server Background Specs
 
 On 2 core Intel Xeon E5-2670v1 @2.60Ghz OpenVZ VPS server
