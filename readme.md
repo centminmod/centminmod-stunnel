@@ -22,6 +22,8 @@ Usage:
 ./stunnel-install.sh {install|update|update-certs|reinstall|check|openssl
 ```
 
+# custom installed stunnel info
+
 ```
 systemctl status stunnelx
 * stunnelx.service - TLS tunnel for network daemons
