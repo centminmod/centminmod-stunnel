@@ -7,15 +7,15 @@
 # performance in mind compiled against openssl 1.1.1 with
 # ecdsa instead of rsa based ssl certificates for better
 # scalability and performance out of the box
-# 
+#
 # stunnel & openssl 1.1.1 are compiled against GCC 7.2.1 
 # compiler with Gold linker if detected on the server
-# 
+#
 # written by George Liu (eva2000) https://centminmod.com
 #########################################################
 # variables
 #############
-VER='0.2'
+VER='0.3'
 DT=$(date +"%d%m%y-%H%M%S")
 DIR_TMP='/svr-setup'
 
@@ -103,11 +103,12 @@ setup_configfile() {
   if [[ "$STUNNEL_CLIENT" = [nN] ]]; then
 # server config
 cat > /etc/stunnel/stunnel.conf <<EOF
-chroot = /var/run/stunnel
+# chroot = /var/run/stunnel
 cert = /etc/pki/tls/certs/stunnel.pem
-pid = /stunnel.pid
-#output = /var/log/stunnel.log
-output = /stunnel.log
+pid = /var/run/stunnel/stunnel.pid
+#pid = /stunnel.pid
+output = /var/log/stunnel.log
+#output = /stunnel.log
 #debug = 7
 sslVersion = TLSv1.2
 
@@ -130,15 +131,27 @@ CAfile = /etc/pki/tls/certs/stunnel.pem
 verify = 3
 sessionCacheSize = 10000
 sessionCacheTimeout = 10
+
+[redis-client]
+client = yes
+#foreground = yes
+accept = 127.0.0.1:8379
+connect = ${REDIS_REMOTEIP:-127.0.0.1}:7379
+cert = /etc/pki/tls/certs/stunnel.pem
+CAfile = /etc/pki/tls/certs/stunnel.pem
+verify = 3
+sessionCacheSize = 10000
+sessionCacheTimeout = 10
 EOF
   elif [[ "$STUNNEL_CLIENT" = [yY] ]]; then
 # client config
 cat > /etc/stunnel/stunnel.conf <<EOF
-chroot = /var/run/stunnel
+# chroot = /var/run/stunnel
 cert = /etc/pki/tls/certs/stunnel.pem
-pid = /stunnel.pid
-#output = /var/log/stunnel.log
-output = /stunnel.log
+pid = /var/run/stunnel/stunnel.pid
+#pid = /stunnel.pid
+output = /var/log/stunnel.log
+#output = /stunnel.log
 #debug = 7
 sslVersion = TLSv1.2
 
@@ -155,7 +168,7 @@ socket = r:SO_KEEPALIVE=1
 client = yes
 #foreground = yes
 accept = 127.0.0.1:8379
-connect = ${REDIS_REMOTEIP:-REDIS_REMOTEIP}:7379
+connect = ${REDIS_REMOTEIP:-127.0.0.1}:7379
 cert = /etc/pki/tls/certs/stunnel.pem
 CAfile = /etc/pki/tls/certs/stunnel.pem
 verify = 3
@@ -288,7 +301,11 @@ install_stunnel() {
   make install
   
   mkdir -p /etc/stunnel
-  touch /var/log/stunnel.log
+  if [ -f /var/log/stunnel.log ]; then
+    echo > /var/log/stunnel.log
+  else
+    touch /var/log/stunnel.log
+  fi
   chmod 666 /var/log/stunnel.log
   useradd -r -m -d /var/run/stunnel -s /bin/false stunnel
   mkdir -p /var/run/stunnel/etc
@@ -353,7 +370,7 @@ case $1 in
     ;;
   * )
     echo
-    echo "Usage:" 
+    echo "Usage:"
     echo "$0 {install|update|reinstall|check|openssl"
     echo
     ;;

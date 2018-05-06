@@ -121,18 +121,82 @@ redis_git_sha1:00000000
 redis_git_dirty:0
 redis_build_id:8e246a05989e6d22
 redis_mode:standalone
-os:Linux 2.6.32-042stab116.1 x86_64
+os:Linux 2.6.32-042stab128.2 x86_64
 arch_bits:64
 multiplexing_api:epoll
 atomicvar_api:atomic-builtin
 gcc_version:4.8.5
-process_id:32590
-run_id:a868f5947d3936cc4d5723a9364de22d26cf6eb2
+process_id:402
+run_id:16e31dd41471b36ed4acd81f266f9c25b067690a
 tcp_port:6379
-uptime_in_seconds:100
+uptime_in_seconds:40771
 uptime_in_days:0
 hz:10
-lru_clock:15560505
+lru_clock:15635653
 executable:/usr/bin/redis-server
 config_file:/etc/redis.conf
+```
+
+Redis server connection through stunnel configured local port 8379
+
+```
+redis-cli -h 127.0.0.1 -p 8379 info server                                                                    
+# Server
+redis_version:4.0.9
+redis_git_sha1:00000000
+redis_git_dirty:0
+redis_build_id:8e246a05989e6d22
+redis_mode:standalone
+os:Linux 2.6.32-042stab128.2 x86_64
+arch_bits:64
+multiplexing_api:epoll
+atomicvar_api:atomic-builtin
+gcc_version:4.8.5
+process_id:402
+run_id:16e31dd41471b36ed4acd81f266f9c25b067690a
+tcp_port:6379
+uptime_in_seconds:40820
+uptime_in_days:0
+hz:10
+lru_clock:15635702
+executable:/usr/bin/redis-server
+config_file:/etc/redis.conf
+```
+
+# Redis benchmarks
+
+Redis direct port 6379
+
+```
+redis-benchmark -h 127.0.0.1 -p 6379 -n 1000000 -t set,get -P 32 -q -c 200
+```
+
+```
+redis-benchmark -h 127.0.0.1 -p 6379 -n 1000000 -t set,get -P 32 -q -c 200
+SET: 695410.31 requests per second
+GET: 833333.31 requests per second
+
+redis-benchmark -h 127.0.0.1 -p 6379 -n 1000000 -t set,get -P 32 -q -c 200
+SET: 669792.38 requests per second
+GET: 793650.81 requests per second
+
+redis-benchmark -h 127.0.0.1 -p 6379 -n 1000000 -t set,get -P 32 -q -c 200
+SET: 675219.50 requests per second
+GET: 827814.62 requests per second
+```
+
+Redis via stunnel port 8379
+
+```
+redis-benchmark -h 127.0.0.1 -p 8379 -n 1000000 -t set,get -P 32 -q -c 200
+SET: 137646.25 requests per second
+GET: 136295.48 requests per second
+
+redis-benchmark -h 127.0.0.1 -p 8379 -n 1000000 -t set,get -P 32 -q -c 200
+SET: 128600.82 requests per second
+GET: 171791.78 requests per second
+
+redis-benchmark -h 127.0.0.1 -p 8379 -n 1000000 -t set,get -P 32 -q -c 200
+SET: 121906.62 requests per second
+GET: 132872.70 requests per second
 ```
