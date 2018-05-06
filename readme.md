@@ -346,7 +346,7 @@ SET: 155110.91 requests per second
 GET: 161264.31 requests per second
 ```
 
-## TLS v1.3 - Stunnel AES 128bit - ECDSA 256bit
+## TLS v1.3 - Stunnel AES 256bit - ECDSA 256bit
 
 Redis via stunnel port 8379 with ECC 256bit ECDSA SSL certs and `TLS 1.3` - `AES 256bit`
 
