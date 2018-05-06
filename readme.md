@@ -1,7 +1,7 @@
 stunnel install for CentOS 7 based [Centmin Mod LEMP stacks](https://centminmod.com/) only
 
 * custom ECC 256bit ECDSA ssl certificated based stunnel installation compiled against OpenSSL 1.1.1 using GCC 7.2.1 compiler with Gold linker
-* default stunnel config setup for Redis servers. [Redis Benchmarks - ECDSA 256bit vs RSA 2048bit](https://github.com/centminmod/centminmod-stunnel#redis-benchmarks)
+* default stunnel config setup for Redis servers. [Redis Benchmarks - TLS v1.2 ECDSA 256bit vs RSA 2048bit](https://github.com/centminmod/centminmod-stunnel#redis-benchmarks) and [TLS v1.3 benchmarks](https://github.com/centminmod/centminmod-stunnel#tls-v13---stunnel-aes-256bit---ecdsa-256bit)
 
 Usage
 
@@ -349,6 +349,11 @@ GET: 161264.31 requests per second
 ## TLS v1.3 - Stunnel AES 256bit - ECDSA 256bit
 
 Redis via stunnel port 8379 with ECC 256bit ECDSA SSL certs and `TLS 1.3` - `AES 256bit`
+
+```
+awk '/ciphersuite/ {print $4,$5,$6,$7}' /var/log/stunnel.log | uniq
+TLSv1.3 ciphersuite: TLS_AES_256_GCM_SHA384 (256-bit
+```
 
 ```
 echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/pki/tls/certs/stunnel.pem 2>&1 | grep -A2 'SSL-Session:'
