@@ -129,7 +129,7 @@ connect = 127.0.0.1:6379
 cert = /etc/pki/tls/certs/stunnel.pem
 CAfile = /etc/pki/tls/certs/stunnel.pem
 verify = 3
-sessionCacheSize = 10000
+sessionCacheSize = 50000
 sessionCacheTimeout = 10
 
 [redis-client]
@@ -140,7 +140,7 @@ connect = ${REDIS_REMOTEIP:-127.0.0.1}:7379
 cert = /etc/pki/tls/certs/stunnel.pem
 CAfile = /etc/pki/tls/certs/stunnel.pem
 verify = 3
-sessionCacheSize = 10000
+sessionCacheSize = 50000
 sessionCacheTimeout = 10
 EOF
   elif [[ "$STUNNEL_CLIENT" = [yY] ]]; then
@@ -172,7 +172,7 @@ connect = ${REDIS_REMOTEIP:-127.0.0.1}:7379
 cert = /etc/pki/tls/certs/stunnel.pem
 CAfile = /etc/pki/tls/certs/stunnel.pem
 verify = 3
-sessionCacheSize = 10000
+sessionCacheSize = 50000
 sessionCacheTimeout = 10
 EOF
   fi
@@ -355,7 +355,6 @@ case $1 in
     systemctl status stunnelx.service
     ;;
   update-certs )
-    setup_peercerts
     setup_stunnel
     ;;
   reinstall )
