@@ -1,6 +1,7 @@
 stunnel install for CentOS 7 based [Centmin Mod LEMP stacks](https://centminmod.com/) only
 
 * custom ECC 256bit ECDSA ssl certificated based stunnel installation compiled against OpenSSL 1.1.1 using GCC 7.2.1 compiler with Gold linker
+* default stunnel config setup for Redis servers. [Redis Benchmarks - ECDSA 256bit vs RSA 2048bit](https://github.com/centminmod/centminmod-stunnel#redis-benchmarks)
 
 Usage
 
