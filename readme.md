@@ -58,6 +58,61 @@ verify                 = none
 ```
 
 ```
+stunnel -options
+stunnel 5.45 on x86_64-pc-linux-gnu platform
+Compiled/running with OpenSSL 1.1.1-pre6 (beta) 1 May 2018
+Threading:PTHREAD Sockets:POLL,IPv6 TLS:ENGINE,FIPS,OCSP,PSK,SNI Auth:LIBWRAP
+ 
+Supported TLS options:
+options = MICROSOFT_SESS_ID_BUG
+options = NETSCAPE_CHALLENGE_BUG
+options = LEGACY_SERVER_CONNECT
+options = NETSCAPE_REUSE_CIPHER_CHANGE_BUG
+options = TLSEXT_PADDING
+options = MICROSOFT_BIG_SSLV3_BUFFER
+options = SAFARI_ECDHE_ECDSA_BUG
+options = SSLEAY_080_CLIENT_DH_BUG
+options = TLS_D5_BUG
+options = TLS_BLOCK_PADDING_BUG
+options = MSIE_SSLV2_RSA_PADDING
+options = SSLREF2_REUSE_CERT_TYPE_BUG
+options = DONT_INSERT_EMPTY_FRAGMENTS
+options = ALL
+options = NO_QUERY_MTU
+options = COOKIE_EXCHANGE
+options = NO_TICKET
+options = CISCO_ANYCONNECT
+options = NO_SESSION_RESUMPTION_ON_RENEGOTIATION
+options = NO_COMPRESSION
+options = ALLOW_UNSAFE_LEGACY_RENEGOTIATION
+options = SINGLE_ECDH_USE
+options = SINGLE_DH_USE
+options = EPHEMERAL_RSA
+options = CIPHER_SERVER_PREFERENCE
+options = TLS_ROLLBACK_BUG
+options = NO_SSLv2
+options = NO_SSLv3
+options = NO_TLSv1
+options = NO_TLSv1.1
+options = NO_TLSv1.2
+options = NO_TLSv1_3
+options = PKCS1_CHECK_1
+options = PKCS1_CHECK_2
+options = NETSCAPE_CA_DN_BUG
+options = NETSCAPE_DEMO_CIPHER_CHANGE_BUG
+options = CRYPTOPRO_TLSEXT_BUG
+options = NO_DTLSv1
+options = NO_DTLSv1_2
+options = NO_SSL_MASK
+options = NO_DTLS_MASK
+options = NO_ENCRYPT_THEN_MAC
+options = ALLOW_NO_DHE_KEX
+options = ENABLE_MIDDLEBOX_COMPAT
+options = NO_RENEGOTIATION
+options = PRIORITIZE_CHACHA
+```
+
+```
 /opt/stunnel-dep/bin/openssl version -a
 OpenSSL 1.1.1-pre6 (beta) 1 May 2018
 built on: Sat May  5 07:28:12 2018 UTC

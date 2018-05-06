@@ -123,6 +123,7 @@ socket = l:TCP_NODELAY=1
 socket = r:TCP_NODELAY=1
 socket = l:SO_KEEPALIVE=1
 socket = r:SO_KEEPALIVE=1
+#socket = a:SO_REUSEADDR=yes
 
 [redis-server]
 client = no
@@ -133,7 +134,7 @@ cert = /etc/pki/tls/certs/stunnel.pem
 CAfile = /etc/pki/tls/certs/stunnel.pem
 verify = 3
 sessionCacheSize = 50000
-sessionCacheTimeout = 10
+sessionCacheTimeout = 300
 
 [redis-client]
 client = yes
@@ -143,7 +144,7 @@ connect = ${REDIS_REMOTEIP:-127.0.0.1}:7379
 CAfile = /etc/pki/tls/certs/stunnel.pem
 verify = 3
 sessionCacheSize = 50000
-sessionCacheTimeout = 10
+sessionCacheTimeout = 300
 EOF
   elif [[ "$STUNNEL_CLIENT" = [yY] ]]; then
 # client config
@@ -168,6 +169,7 @@ socket = l:TCP_NODELAY=1
 socket = r:TCP_NODELAY=1
 socket = l:SO_KEEPALIVE=1
 socket = r:SO_KEEPALIVE=1
+#socket = a:SO_REUSEADDR=yes
 
 [redis-client]
 client = yes
@@ -177,7 +179,7 @@ connect = ${REDIS_REMOTEIP:-127.0.0.1}:7379
 CAfile = /etc/pki/tls/certs/stunnel.pem
 verify = 3
 sessionCacheSize = 50000
-sessionCacheTimeout = 10
+sessionCacheTimeout = 300
 EOF
   fi
 }
