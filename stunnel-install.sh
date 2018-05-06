@@ -15,7 +15,7 @@
 #########################################################
 # variables
 #############
-VER='0.4'
+VER='0.5'
 DT=$(date +"%d%m%y-%H%M%S")
 DIR_TMP='/svr-setup'
 
@@ -34,6 +34,11 @@ STUNNEL_LIBDIR='/opt/stunnel-dep'
 # openssl 1.1.1 version
 STUNNEL_OPENSSLVER='1.1.1-pre6'
 STUNNEL_OPENSSLTLSTHREE='yes'
+# default redis ports
+STUNNEL_REDISSERVERCACCEPTPORT='7379'
+STUNNEL_REDISSERVERCCONNECTPORT='6379'
+STUNNEL_REDISCLIENTCACCEPTPORT='8379'
+STUNNEL_REDISCLIENTCCONNECTPORT='7379'
 # GCC 7.2.1 compile as march=native or march=x86-64
 # default x86-64
 MARCH_TARGETNATIVE='n'
@@ -67,6 +72,21 @@ if [[ "$MARCH_TARGETNATIVE" = [yY] ]]; then
 else
   MARCH_TARGET='x86-64'
 fi
+
+setup_csf() {
+if [ -f /etc/csf/csf.conf ]; then
+  # leave inbound to end user configuration
+  if [[ ! "$(grep "$STUNNEL_REDISCLIENTCCONNECTPORT," /etc/csf/csf.conf)" ]]; then
+    echo
+    echo "CSF Firewall Port Whitelisting"
+    # client outbound TCP/TCP6 7379
+    sed -i "s/TCP_OUT = \"/TCP_OUT = \"$STUNNEL_REDISCLIENTCCONNECTPORT,/g" /etc/csf/csf.conf
+    sed -i "s/TCP6_OUT = \"/TCP6_OUT = \"$STUNNEL_REDISCLIENTCCONNECTPORT,/g" /etc/csf/csf.conf
+    csf -ra >/dev/null 2>&1
+    echo
+  fi
+fi
+}
 
 install_openssl() {
   if [[ -f /opt/rh/devtoolset-7/root/usr/bin/gcc && -f /opt/rh/devtoolset-7/root/usr/bin/g++ ]]; then
@@ -128,8 +148,8 @@ socket = r:SO_KEEPALIVE=1
 [redis-server]
 client = no
 #foreground = yes
-accept = 7379
-connect = 127.0.0.1:6379
+accept = ${STUNNEL_REDISSERVERCACCEPTPORT}
+connect = 127.0.0.1:${STUNNEL_REDISSERVERCCONNECTPORT}
 cert = /etc/pki/tls/certs/stunnel.pem
 CAfile = /etc/pki/tls/certs/stunnel.pem
 verify = 3
@@ -139,8 +159,8 @@ sessionCacheTimeout = 300
 [redis-client]
 client = yes
 #foreground = yes
-accept = 127.0.0.1:8379
-connect = ${REDIS_REMOTEIP:-127.0.0.1}:7379
+accept = 127.0.0.1:${STUNNEL_REDISCLIENTCACCEPTPORT}
+connect = ${REDIS_REMOTEIP:-127.0.0.1}:${STUNNEL_REDISCLIENTCCONNECTPORT}
 CAfile = /etc/pki/tls/certs/stunnel.pem
 verify = 3
 sessionCacheSize = 50000
@@ -174,8 +194,8 @@ socket = r:SO_KEEPALIVE=1
 [redis-client]
 client = yes
 #foreground = yes
-accept = 127.0.0.1:8379
-connect = ${REDIS_REMOTEIP:-127.0.0.1}:7379
+accept = 127.0.0.1:${STUNNEL_REDISCLIENTCACCEPTPORT}
+connect = ${REDIS_REMOTEIP:-127.0.0.1}:${STUNNEL_REDISCLIENTCCONNECTPORT}
 CAfile = /etc/pki/tls/certs/stunnel.pem
 verify = 3
 sessionCacheSize = 50000
@@ -351,6 +371,7 @@ case $1 in
     install_openssl
     install_stunnel
     setup_stunnel
+    setup_csf
     ;;
   update )
     install_openssl
@@ -366,6 +387,7 @@ case $1 in
   reinstall )
     install_openssl
     install_stunnel
+    setup_csf
     systemctl daemon-reload
     systemctl restart stunnelx.service
     echo
