@@ -1,6 +1,6 @@
 stunnel install for CentOS 7 based [Centmin Mod LEMP stacks](https://centminmod.com/) only
 
-* Custom ECC 256bit ECDSA ssl certificate based stunnel installation compiled against with [jemalloc 5.0.1](#jemalloc) memory allocator and OpenSSL 1.1.1 using GCC 7.2.1 compiler with Gold linker
+* Custom ECC 256bit ECDSA ssl certificate based stunnel installation compiled with [jemalloc 5.0.1](#jemalloc) memory allocator and OpenSSL 1.1.1 using GCC 7.2.1 compiler with Gold linker
 * ECDSA performance in OpenSSL 1.1.1 is [~30-40% faster](#ecdsa) than in OpenSSL 1.0.2 versions
 * [TLS v1.3 ECDSA 256bit](https://github.com/centminmod/centminmod-stunnel#tls-v13---stunnel-aes-256bit---ecdsa-256bit) configuration was the fastest when stunnel compiled with [jemalloc 5.0.1](#jemalloc)
 * Default stunnel config setup for Redis servers. [Redis Benchmarks - TLS v1.2 ECDSA 256bit vs RSA 2048bit](https://github.com/centminmod/centminmod-stunnel#redis-benchmarks) and [TLS v1.3 benchmarks](https://github.com/centminmod/centminmod-stunnel#tls-v13---stunnel-aes-256bit---ecdsa-256bit)
