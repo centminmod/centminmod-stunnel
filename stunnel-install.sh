@@ -143,7 +143,7 @@ socket = l:TCP_NODELAY=1
 socket = r:TCP_NODELAY=1
 socket = l:SO_KEEPALIVE=1
 socket = r:SO_KEEPALIVE=1
-#socket = a:SO_REUSEADDR=yes
+socket = a:SO_REUSEADDR=yes
 
 [redis-server]
 client = no
