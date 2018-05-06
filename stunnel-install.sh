@@ -15,7 +15,7 @@
 #########################################################
 # variables
 #############
-VER='0.5'
+VER='0.6'
 DT=$(date +"%d%m%y-%H%M%S")
 DIR_TMP='/svr-setup'
 
@@ -42,6 +42,9 @@ STUNNEL_REDISCLIENTCCONNECTPORT='7379'
 # GCC 7.2.1 compile as march=native or march=x86-64
 # default x86-64
 MARCH_TARGETNATIVE='n'
+# jemalloc
+STUNNEL_JEMALLOC='y'
+STUNNEL_JEMALLOCVER='5.0.1'
 
 # ssl cert variables
 STUNNEL_HOSTNAME=$(hostname -f)
@@ -135,7 +138,7 @@ output = /var/log/stunnel.log
 setuid = stunnel
 setgid = stunnel
 #ciphers = HIGH:!DH:!aNULL:!SSLv2:!SSLv3
-ciphers = TLS_AES_128_GCM_SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:HIGH:!DH:!aNULL:!SSLv2:!SSLv3
+ciphers = TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:HIGH:!DH:!aNULL:!SSLv2:!SSLv3
 options = CIPHER_SERVER_PREFERENCE
 #options = DONT_INSERT_EMPTY_FRAGMENTS
 options = NO_SSLv3
@@ -181,7 +184,7 @@ output = /var/log/stunnel.log
 setuid = stunnel
 setgid = stunnel
 #ciphers = HIGH:!DH:!aNULL:!SSLv2:!SSLv3
-ciphers = TLS_AES_128_GCM_SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:HIGH:!DH:!aNULL:!SSLv2:!SSLv3
+ciphers = TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:HIGH:!DH:!aNULL:!SSLv2:!SSLv3
 options = CIPHER_SERVER_PREFERENCE
 #options = DONT_INSERT_EMPTY_FRAGMENTS
 options = NO_SSLv3
@@ -308,6 +311,35 @@ setup_stunnel() {
   echo
 }
 
+install_jemalloc() {
+  if [[ "$STUNNEL_JEMALLOC" = [yY] ]]; then
+    cd "$DIR_TMP"
+    if [ ! -f "jemalloc-${STUNNEL_JEMALLOCVER}.tar.gz" ]; then
+      echo "wget https://github.com/jemalloc/jemalloc/archive/${STUNNEL_JEMALLOCVER}.tar.gz -O jemalloc-${STUNNEL_JEMALLOCVER}.tar.gz"
+      wget https://github.com/jemalloc/jemalloc/archive/${STUNNEL_JEMALLOCVER}.tar.gz -O jemalloc-${STUNNEL_JEMALLOCVER}.tar.gz
+    fi
+    rm -rf "jemalloc-${STUNNEL_JEMALLOCVER}"
+    tar xzf jemalloc-${STUNNEL_JEMALLOCVER}.tar.gz
+    cd jemalloc-${STUNNEL_JEMALLOCVER}
+    export CC="gcc"
+    export CXX="g++"
+    make clean; make distclean
+    ./autogen.sh
+    echo "./configure --disable-cxx --prefix=${STUNNEL_LIBDIR} --libdir=${STUNNEL_LIBDIR}/lib --includedir=${STUNNEL_LIBDIR}/include"
+    ./configure --disable-cxx --prefix=${STUNNEL_LIBDIR} --libdir=${STUNNEL_LIBDIR}/lib --includedir=${STUNNEL_LIBDIR}/include
+    # make -j$(nproc)
+    make -j$(nproc) build_lib_shared
+    make -j$(nproc) build_lib_static
+    # make -j$(nproc) build_lib
+    # make install
+    make install_lib_shared
+    make install_lib_static
+    make install_include
+    make install_bin
+    make install_lib_pc
+  fi
+}
+
 install_stunnel() {
   if [[ -f /opt/rh/devtoolset-7/root/usr/bin/gcc && -f /opt/rh/devtoolset-7/root/usr/bin/g++ ]]; then
     unset CFLAGS
@@ -322,7 +354,7 @@ install_stunnel() {
   tar xzf "stunnel-${STUNNEL_VERSION}.tar.gz"
   cd stunnel-5.45
   make clean; make distclean
-  LDFLAGS="-Wl,-rpath -Wl,${STUNNEL_LIBDIR}/lib" ./configure --with-ssl=${STUNNEL_LIBDIR}
+  LDFLAGS="-Wl,-rpath -Wl,${STUNNEL_LIBDIR}/lib -ljemalloc" ./configure --with-ssl=${STUNNEL_LIBDIR}
   make -j$(nproc)
   make install
   
@@ -341,6 +373,9 @@ install_stunnel() {
   
   mkdir -p /etc/systemd/system/stunnelx.service.d
   echo -e "[Service]\nLimitNOFILE=${STUNNEL_FD}\nLimitNPROC=${STUNNEL_FD}" > /etc/systemd/system/stunnelx.service.d/limit.conf
+  # if [[ "$STUNNEL_JEMALLOC" = [yY] && -f /usr/lib64/libjemalloc.so.1 ]]; then
+  #   echo -e "[Service]\nEnvironment=\"LD_PRELOAD = /usr/lib64/libjemalloc.so.1\"" > /etc/systemd/system/stunnelx.service.d/jemalloc.conf
+  # fi
 
 cat > /usr/lib/systemd/system/stunnelx.service <<EOF
 [Unit]
@@ -369,12 +404,14 @@ stunnel_check() {
 case $1 in
   install )
     install_openssl
+    install_jemalloc
     install_stunnel
     setup_stunnel
     setup_csf
     ;;
   update )
     install_openssl
+    install_jemalloc
     install_stunnel
     systemctl daemon-reload
     systemctl restart stunnelx.service
@@ -386,6 +423,7 @@ case $1 in
     ;;
   reinstall )
     install_openssl
+    install_jemalloc
     install_stunnel
     setup_csf
     systemctl daemon-reload

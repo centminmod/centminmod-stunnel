@@ -1,8 +1,9 @@
 stunnel install for CentOS 7 based [Centmin Mod LEMP stacks](https://centminmod.com/) only
 
-* custom ECC 256bit ECDSA ssl certificate based stunnel installation compiled against OpenSSL 1.1.1 using GCC 7.2.1 compiler with Gold linker
+* Custom ECC 256bit ECDSA ssl certificate based stunnel installation compiled against with [jemalloc 5.0.1](#jemalloc) memory allocator and OpenSSL 1.1.1 using GCC 7.2.1 compiler with Gold linker
 * ECDSA performance in OpenSSL 1.1.1 is [~30-40% faster](#ecdsa) than in OpenSSL 1.0.2 versions
-* default stunnel config setup for Redis servers. [Redis Benchmarks - TLS v1.2 ECDSA 256bit vs RSA 2048bit](https://github.com/centminmod/centminmod-stunnel#redis-benchmarks) and [TLS v1.3 benchmarks](https://github.com/centminmod/centminmod-stunnel#tls-v13---stunnel-aes-256bit---ecdsa-256bit)
+* [TLS v1.3 ECDSA 256bit](https://github.com/centminmod/centminmod-stunnel#tls-v13---stunnel-aes-256bit---ecdsa-256bit) configuration was the fastest when stunnel compiled with [jemalloc 5.0.1](#jemalloc)
+* Default stunnel config setup for Redis servers. [Redis Benchmarks - TLS v1.2 ECDSA 256bit vs RSA 2048bit](https://github.com/centminmod/centminmod-stunnel#redis-benchmarks) and [TLS v1.3 benchmarks](https://github.com/centminmod/centminmod-stunnel#tls-v13---stunnel-aes-256bit---ecdsa-256bit)
 
 # ECDSA 
 
@@ -365,6 +366,13 @@ GET: 161264.31 requests per second
 Redis via stunnel port 8379 with ECC 256bit ECDSA SSL certs and `TLS 1.3` - `AES 256bit`
 
 ```
+/opt/stunnel-dep/bin/openssl ciphers -V '1.3'     
+    0x13,0x02 - TLS_AES_256_GCM_SHA384  TLSv1.3 Kx=any      Au=any  Enc=AESGCM(256) Mac=AEAD
+    0x13,0x03 - TLS_CHACHA20_POLY1305_SHA256 TLSv1.3 Kx=any      Au=any  Enc=CHACHA20/POLY1305(256) Mac=AEAD
+    0x13,0x01 - TLS_AES_128_GCM_SHA256  TLSv1.3 Kx=any      Au=any  Enc=AESGCM(128) Mac=AEAD
+```
+
+```
 awk '/ciphersuite/ {print $4,$5,$6,$7}' /var/log/stunnel.log | uniq
 TLSv1.3 ciphersuite: TLS_AES_256_GCM_SHA384 (256-bit
 ```
@@ -404,6 +412,30 @@ GET: 181290.80 requests per second
 redis-benchmark -h 127.0.0.1 -p 8379 -n 1000000 -t set,get -P 32 -q -c 200
 SET: 199760.28 requests per second
 GET: 191168.03 requests per second
+```
+
+### jemalloc
+
+With `jemalloc 5.0.1` memory allocator + `SO_REUSEADDR=yes` Redis via stunnel port 8379 with ECC 256bit ECDSA SSL certs and `TLS 1.3` - `AES 256bit`
+
+```
+lsof | grep stunnel | grep jemalloc
+stunnel   30512         stunnel  mem       REG         182,160625   3429720  2912291 /opt/stunnel-dep/lib/libjemalloc.so.2
+stunnel   30512 30513   stunnel  mem       REG         182,160625   3429720  2912291 /opt/stunnel-dep/lib/libjemalloc.so.2
+```
+
+```
+redis-benchmark -h 127.0.0.1 -p 8379 -n 1000000 -t set,get -P 32 -q -c 200                                                                            
+SET: 200481.16 requests per second
+GET: 214362.28 requests per second
+
+redis-benchmark -h 127.0.0.1 -p 8379 -n 1000000 -t set,get -P 32 -q -c 200
+SET: 217013.89 requests per second
+GET: 205254.50 requests per second
+
+redis-benchmark -h 127.0.0.1 -p 8379 -n 1000000 -t set,get -P 32 -q -c 200
+SET: 208594.06 requests per second
+GET: 223813.80 requests per second
 ```
 
 ## Redis Server Background Specs
