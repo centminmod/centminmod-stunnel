@@ -194,7 +194,16 @@ SET: 675219.50 requests per second
 GET: 827814.62 requests per second
 ```
 
-Redis via stunnel port 8379 with ECC 256bit ECDSA SSL certs and TLS 1.2
+## Stunnel AES 256bit - ECDSA 256bit vs RSA 2048bit
+
+Redis via stunnel port 8379 with ECC 256bit ECDSA SSL certs and TLS 1.2 - AES 256bit
+
+```
+echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/pki/tls/certs/stunnel.pem 2>&1 | grep -A2 'SSL-Session:'
+SSL-Session:
+    Protocol  : TLSv1.2
+    Cipher    : ECDHE-ECDSA-AES256-GCM-SHA384
+```
 
 ```
 redis-benchmark -h 127.0.0.1 -p 8379 -n 1000000 -t set,get -P 32 -q -c 200
@@ -210,7 +219,14 @@ SET: 182016.75 requests per second
 GET: 156494.53 requests per second
 ```
 
-Redis via stunnel port 8379 with RSA 2048bit Standard SSL certs and TLS 1.2
+Redis via stunnel port 8379 with RSA 2048bit Standard SSL certs and TLS 1.2 - AES 256bit
+
+```
+echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/pki/tls/certs/stunnel.pem 2>&1 | grep -A2 'SSL-Session:'
+SSL-Session:
+    Protocol  : TLSv1.2
+    Cipher    : ECDHE-RSA-AES256-GCM-SHA384
+```
 
 ```
 redis-benchmark -h 127.0.0.1 -p 8379 -n 1000000 -t set,get -P 32 -q -c 200
@@ -224,6 +240,54 @@ GET: 170823.36 requests per second
 redis-benchmark -h 127.0.0.1 -p 8379 -n 1000000 -t set,get -P 32 -q -c 200
 SET: 170357.75 requests per second
 GET: 161655.36 requests per second
+```
+
+## Stunnel AES 128bit - ECDSA 256bit vs RSA 2048bit
+
+Redis via stunnel port 8379 with ECC 256bit ECDSA SSL certs and TLS 1.2 - AES 128bit
+
+```
+echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/pki/tls/certs/stunnel.pem 2>&1 | grep -A2 'SSL-Session:'
+SSL-Session:
+    Protocol  : TLSv1.2
+    Cipher    : ECDHE-ECDSA-AES128-GCM-SHA256
+```
+
+```
+redis-benchmark -h 127.0.0.1 -p 8379 -n 1000000 -t set,get -P 32 -q -c 200
+SET: 138850.31 requests per second
+GET: 176928.52 requests per second
+
+redis-benchmark -h 127.0.0.1 -p 8379 -n 1000000 -t set,get -P 32 -q -c 200
+SET: 144864.55 requests per second
+GET: 186011.91 requests per second
+
+redis-benchmark -h 127.0.0.1 -p 8379 -n 1000000 -t set,get -P 32 -q -c 200
+SET: 153374.23 requests per second
+GET: 173250.17 requests per second
+```
+
+Redis via stunnel port 8379 with RSA 2048bit Standard SSL certs and TLS 1.2 - AES 128bit
+
+```
+echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/pki/tls/certs/stunnel.pem 2>&1 | grep -A2 'SSL-Session:'
+SSL-Session:
+    Protocol  : TLSv1.2
+    Cipher    : ECDHE-RSA-AES128-GCM-SHA256
+```
+
+```
+redis-benchmark -h 127.0.0.1 -p 8379 -n 1000000 -t set,get -P 32 -q -c 200
+SET: 117109.73 requests per second
+GET: 148853.83 requests per second
+
+redis-benchmark -h 127.0.0.1 -p 8379 -n 1000000 -t set,get -P 32 -q -c 200
+SET: 147601.47 requests per second
+GET: 154607.30 requests per second
+
+redis-benchmark -h 127.0.0.1 -p 8379 -n 1000000 -t set,get -P 32 -q -c 200
+SET: 155110.91 requests per second
+GET: 161264.31 requests per second
 ```
 
 ## Redis Server Background Specs

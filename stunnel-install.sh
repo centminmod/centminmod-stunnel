@@ -114,7 +114,10 @@ sslVersion = TLSv1.2
 
 setuid = stunnel
 setgid = stunnel
-ciphers = HIGH:!DH:!aNULL:!SSLv2:!SSLv3
+#ciphers = HIGH:!DH:!aNULL:!SSLv2:!SSLv3
+ciphers = ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:HIGH:!DH:!aNULL:!SSLv2:!SSLv3
+options = CIPHER_SERVER_PREFERENCE
+#options = DONT_INSERT_EMPTY_FRAGMENTS
 options = NO_SSLv3
 socket = l:TCP_NODELAY=1
 socket = r:TCP_NODELAY=1
@@ -137,7 +140,6 @@ client = yes
 #foreground = yes
 accept = 127.0.0.1:8379
 connect = ${REDIS_REMOTEIP:-127.0.0.1}:7379
-cert = /etc/pki/tls/certs/stunnel.pem
 CAfile = /etc/pki/tls/certs/stunnel.pem
 verify = 3
 sessionCacheSize = 50000
@@ -157,7 +159,10 @@ sslVersion = TLSv1.2
 
 setuid = stunnel
 setgid = stunnel
-ciphers = HIGH:!DH:!aNULL:!SSLv2:!SSLv3
+#ciphers = HIGH:!DH:!aNULL:!SSLv2:!SSLv3
+ciphers = ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:HIGH:!DH:!aNULL:!SSLv2:!SSLv3
+options = CIPHER_SERVER_PREFERENCE
+#options = DONT_INSERT_EMPTY_FRAGMENTS
 options = NO_SSLv3
 socket = l:TCP_NODELAY=1
 socket = r:TCP_NODELAY=1
@@ -169,7 +174,6 @@ client = yes
 #foreground = yes
 accept = 127.0.0.1:8379
 connect = ${REDIS_REMOTEIP:-127.0.0.1}:7379
-cert = /etc/pki/tls/certs/stunnel.pem
 CAfile = /etc/pki/tls/certs/stunnel.pem
 verify = 3
 sessionCacheSize = 50000
