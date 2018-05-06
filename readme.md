@@ -400,6 +400,70 @@ dd if=/dev/urandom of=/dev/null
 53854720 bytes (54 MB) copied, 9.95861 s, 5.4 MB/s
 ```
 
+### System OpenSSL 1.0.2k
+
+```
+CPUS=2
+OPENSSL_BINPATH='/usr/bin/openssl'
+$OPENSSL_BINPATH speed -multi ${CPUS} rsa4096 rsa2048 ecdsap256 sha256 sha1 md5 rc4 aes-256-cbc aes-128-cbc
+$OPENSSL_BINPATH speed -evp aes256 -multi ${CPUS}
+
+OpenSSL 1.0.2k-fips  26 Jan 2017
+built on: reproducible build, date unspecified
+options:bn(64,64) md2(int) rc4(16x,int) des(idx,cisc,16,int) aes(partial) idea(int) blowfish(idx) 
+compiler: gcc -I. -I.. -I../include  -fPIC -DOPENSSL_PIC -DZLIB -DOPENSSL_THREADS -D_REENTRANT -DDSO_DLFCN -DHAVE_DLFCN_H -DKRB5_MIT -m64 -DL_ENDIAN -Wall -O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-strong --param=ssp-buffer-size=4 -grecord-gcc-switches   -m64 -mtune=generic -Wa,--noexecstack -DPURIFY -DOPENSSL_IA32_SSE2 -DOPENSSL_BN_ASM_MONT -DOPENSSL_BN_ASM_MONT5 -DOPENSSL_BN_ASM_GF2m -DRC4_ASM -DSHA1_ASM -DSHA256_ASM -DSHA512_ASM -DMD5_ASM -DAES_ASM -DVPAES_ASM -DBSAES_ASM -DWHIRLPOOL_ASM -DGHASH_ASM -DECP_NISTZ256_ASM
+md5              78286.02k   236562.15k   539289.34k   805205.33k   935010.30k
+sha1             95498.75k   275328.62k   613020.16k   873856.34k   988973.74k
+rc4             614633.93k   979997.40k  1131005.44k  1160783.53k  1204794.71k
+aes-128 cbc     157016.10k   167505.05k   169763.84k   171316.22k   172660.05k
+aes-256 cbc     114081.28k   120184.87k   121717.85k   121146.37k   121913.34k
+sha256           86382.77k   192901.87k   334106.71k   412383.57k   436051.97k
+                  sign    verify    sign/s verify/s
+rsa 2048 bits 0.000799s 0.000024s   1251.2  42109.9
+rsa 4096 bits 0.005704s 0.000089s    175.3  11236.3
+                              sign    verify    sign/s verify/s
+ 256 bit ecdsa (nistp256)   0.0000s   0.0001s  29198.6  11696.3
+
+OpenSSL 1.0.2k-fips  26 Jan 2017
+built on: reproducible build, date unspecified
+options:bn(64,64) md2(int) rc4(16x,int) des(idx,cisc,16,int) aes(partial) idea(int) blowfish(idx) 
+compiler: gcc -I. -I.. -I../include  -fPIC -DOPENSSL_PIC -DZLIB -DOPENSSL_THREADS -D_REENTRANT -DDSO_DLFCN -DHAVE_DLFCN_H -DKRB5_MIT -m64 -DL_ENDIAN -Wall -O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-strong --param=ssp-buffer-size=4 -grecord-gcc-switches   -m64 -mtune=generic -Wa,--noexecstack -DPURIFY -DOPENSSL_IA32_SSE2 -DOPENSSL_BN_ASM_MONT -DOPENSSL_BN_ASM_MONT5 -DOPENSSL_BN_ASM_GF2m -DRC4_ASM -DSHA1_ASM -DSHA256_ASM -DSHA512_ASM -DMD5_ASM -DAES_ASM -DVPAES_ASM -DBSAES_ASM -DWHIRLPOOL_ASM -DGHASH_ASM -DECP_NISTZ256_ASM
+evp             685059.22k   716561.00k   725262.59k   727466.67k   724923.73k
+```
+
+### Custom OpenSSL 1.1.1-pre6
+
+```
+CPUS=2
+OPENSSL_BINPATH='/opt/stunnel-dep/bin/openssl'
+$OPENSSL_BINPATH speed -multi ${CPUS} rsa4096 rsa2048 ecdsap256 sha256 sha1 md5 rc4 aes-256-cbc aes-128-cbc
+$OPENSSL_BINPATH speed -evp aes256 -multi ${CPUS}
+
+OpenSSL 1.1.1-pre6 (beta) 1 May 2018
+built on: Sun May  6 09:23:43 2018 UTC
+options:bn(64,64) rc4(16x,int) des(int) aes(partial) idea(int) blowfish(ptr) 
+compiler: ccache gcc -fPIC -pthread -m64  -Wa,--noexecstack -Wall -O3 -march=x86-64 -fuse-ld=gold -Wimplicit-fallthrough=0 -fcode-hoisting -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_CPUID_OBJ -DOPENSSL_IA32_SSE2 -DOPENSSL_BN_ASM_MONT -DOPENSSL_BN_ASM_MONT5 -DOPENSSL_BN_ASM_GF2m -DSHA1_ASM -DSHA256_ASM -DSHA512_ASM -DKECCAK1600_ASM -DRC4_ASM -DMD5_ASM -DAES_ASM -DVPAES_ASM -DBSAES_ASM -DGHASH_ASM -DECP_NISTZ256_ASM -DX25519_ASM -DPADLOCK_ASM -DPOLY1305_ASM -DNDEBUG
+md5             166551.94k   392143.59k   696030.04k   863324.84k   915111.94k   940889.43k
+sha1            157937.08k   387046.93k   718987.01k   934882.30k  1022451.71k  1027407.87k
+rc4             605383.53k   970227.82k  1136071.59k  1177563.82k  1201012.74k  1198746.28k
+aes-128 cbc     156092.92k   169357.29k   170210.73k   173428.39k   174148.27k   174314.84k
+aes-256 cbc     115043.86k   121271.59k   122045.10k   121122.82k   122579.63k   122530.47k
+sha256           90741.52k   196594.58k   339540.05k   410104.49k   440257.19k   438392.15k
+                  sign    verify    sign/s verify/s
+rsa 2048 bits 0.000801s 0.000024s   1247.7  41682.7
+rsa 4096 bits 0.005659s 0.000088s    176.7  11416.6
+                              sign    verify    sign/s verify/s
+ 256 bit ecdsa (nistp256)   0.0000s   0.0001s  38237.0  12414.5
+
+OpenSSL 1.1.1-pre6 (beta) 1 May 2018
+built on: Sun May  6 09:23:43 2018 UTC
+options:bn(64,64) rc4(16x,int) des(int) aes(partial) idea(int) blowfish(ptr) 
+compiler: ccache gcc -fPIC -pthread -m64  -Wa,--noexecstack -Wall -O3 -march=x86-64 -fuse-ld=gold -Wimplicit-fallthrough=0 -fcode-hoisting -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_CPUID_OBJ -DOPENSSL_IA32_SSE2 -DOPENSSL_BN_ASM_MONT -DOPENSSL_BN_ASM_MONT5 -DOPENSSL_BN_ASM_GF2m -DSHA1_ASM -DSHA256_ASM -DSHA512_ASM -DKECCAK1600_ASM -DRC4_ASM -DMD5_ASM -DAES_ASM -DVPAES_ASM -DBSAES_ASM -DGHASH_ASM -DECP_NISTZ256_ASM -DX25519_ASM -DPADLOCK_ASM -DPOLY1305_ASM -DNDEBUG
+evp             617543.15k   705934.66k   723616.51k   723812.01k   726867.97k   725510.83k
+```
+
+### CPU Specs
+
 ```
 cat /proc/cpuinfo
 processor       : 0
