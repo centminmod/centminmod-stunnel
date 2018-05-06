@@ -5,7 +5,7 @@ stunnel install for CentOS 7 based [Centmin Mod LEMP stacks](https://centminmod.
 * [TLS v1.3 ECDSA 256bit](https://github.com/centminmod/centminmod-stunnel#tls-v13---stunnel-aes-256bit---ecdsa-256bit) configuration was the fastest when stunnel compiled with [jemalloc 5.0.1](#jemalloc)
 * Default stunnel config setup for Redis servers. [Redis Benchmarks - TLS v1.2 ECDSA 256bit vs RSA 2048bit](https://github.com/centminmod/centminmod-stunnel#redis-benchmarks) and [TLS v1.3 benchmarks](https://github.com/centminmod/centminmod-stunnel#tls-v13---stunnel-aes-256bit---ecdsa-256bit)
 
-# ECDSA 
+# ECDSA
 
 From [OpenSSL 1.0.2k system](https://github.com/centminmod/centminmod-stunnel#system-openssl-102k) vs [OpenSSL 1.1.1-pre6 benchmarks](https://github.com/centminmod/centminmod-stunnel#custom-openssl-111-pre6)
 
@@ -244,6 +244,19 @@ config_file:/etc/redis.conf
 ```
 
 # Redis benchmarks
+
+Average of 3 `redis-benchmark` runs
+
+|Config: OpenSSL 1.1.1-pre6|Protocol|Cert Type|Cipher|Redis SET|Redis GET
+|---|---|---|---|---|---
+|Redis direct 6379|none|none|none|680141|818266
+|Redis Stunnel|TLSv1.2|ECDSA 256bit|ECDHE-ECDSA-AES256-GCM-SHA384|149421|154861
+|Redis Stunnel|TLSv1.2|RSA 2048bit|ECDHE-RSA-AES256-GCM-SHA384|139251|154051
+|Redis Stunnel|TLSv1.2|ECDSA 256bit|ECDHE-ECDSA-AES128-GCM-SHA256|145696|178730
+|Redis Stunnel|TLSv1.2|RSA 2048bit|ECDHE-RSA-AES128-GCM-SHA256|139941|154908
+|Redis Stunnel|TLSv1.3|ECDSA 256bit|TLS_AES_256_GCM_SHA384|172316|193784
+|Redis Stunnel SO_REUSEADDR=yes|TLSv1.3|ECDSA 256bit|TLS_AES_256_GCM_SHA384|184652|188590
+|Redis Stunnel SO_REUSEADDR=yes + jemalloc 5.0.1|TLSv1.3|ECDSA 256bit|TLS_AES_256_GCM_SHA384|208696|214477
 
 Redis direct port 6379
 
