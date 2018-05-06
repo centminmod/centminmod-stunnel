@@ -11,7 +11,9 @@ From [OpenSSL 1.0.2k system](https://github.com/centminmod/centminmod-stunnel#sy
 |OpenSSL Version | cipher                 |     sign|    verify|    sign/s| verify/s
 | --- | --- | --- | --- | --- | --- 
 |OpenSSL 1.0.2k system|256 bit ecdsa (nistp256)|   0.0000s|   0.0001s|  29198.6|  11696.3
+|OpenSSL 1.0.2k system|rsa 2048 bits| 0.000799s| 0.000024s|   1251.2|  42109.9
 |OpenSSL 1.1.1-pre6|256 bit ecdsa (nistp256)|   0.0000s|   0.0001s|  38237.0|  12414.5
+|OpenSSL 1.1.1-pre6|rsa 2048 bits| 0.000801s| 0.000024s|   1247.7|  41682.7
 
 # stunnel-install.sh Usage
 
