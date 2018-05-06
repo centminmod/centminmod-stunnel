@@ -200,3 +200,82 @@ redis-benchmark -h 127.0.0.1 -p 8379 -n 1000000 -t set,get -P 32 -q -c 200
 SET: 121906.62 requests per second
 GET: 132872.70 requests per second
 ```
+
+## Redis Server Background Specs
+
+On 2 core Intel Xeon E5-2670v1 @2.60Ghz OpenVZ VPS server
+
+```
+dd if=/dev/zero of=/dev/null 
+9684753+0 records in
+9684753+0 records out
+4958593536 bytes (5.0 GB) copied, 10.6449 s, 466 MB/s
+```
+
+```
+dd if=/dev/random of=/dev/null  
+0+196607 records in
+29948+0 records out
+15333376 bytes (15 MB) copied, 10.0214 s, 1.5 MB/s
+```
+```
+dd if=/dev/urandom of=/dev/null 
+105186+0 records in
+105185+0 records out
+53854720 bytes (54 MB) copied, 9.95861 s, 5.4 MB/s
+```
+
+```
+cat /proc/cpuinfo
+processor       : 0
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 45
+model name      : Intel(R) Xeon(R) CPU E5-2670 0 @ 2.60GHz
+stepping        : 6
+microcode       : 1561
+cpu MHz         : 2599.889
+cache size      : 20480 KB
+physical id     : 0
+siblings        : 16
+core id         : 0
+cpu cores       : 8
+apicid          : 0
+initial apicid  : 0
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 13
+wp              : yes
+flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx lahf_lm ida arat epb pln pts dtherm pti retpoline tpr_shadow vnmi flexpriority ept vpid xsaveopt
+bogomips        : 5199.77
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 46 bits physical, 48 bits virtual
+power management:
+
+processor       : 1
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 45
+model name      : Intel(R) Xeon(R) CPU E5-2670 0 @ 2.60GHz
+stepping        : 6
+microcode       : 1561
+cpu MHz         : 2599.889
+cache size      : 20480 KB
+physical id     : 0
+siblings        : 16
+core id         : 1
+cpu cores       : 8
+apicid          : 2
+initial apicid  : 2
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 13
+wp              : yes
+flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx lahf_lm ida arat epb pln pts dtherm pti retpoline tpr_shadow vnmi flexpriority ept vpid xsaveopt
+bogomips        : 5199.77
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 46 bits physical, 48 bits virtual
+power management:
+```
