@@ -33,7 +33,7 @@ STUNNEL_FD='1048576'
 STUNNEL_LIBDIR='/opt/stunnel-dep'
 # openssl 1.1.1 version
 STUNNEL_OPENSSLVER='1.1.1-pre6'
-STUNNEL_OPENSSLTLSTHREE='n'
+STUNNEL_OPENSSLTLSTHREE='yes'
 # GCC 7.2.1 compile as march=native or march=x86-64
 # default x86-64
 MARCH_TARGETNATIVE='n'
@@ -110,12 +110,12 @@ pid = /var/run/stunnel/stunnel.pid
 output = /var/log/stunnel.log
 #output = /stunnel.log
 #debug = 7
-sslVersion = TLSv1.2
+#sslVersion = TLSv1.2
 
 setuid = stunnel
 setgid = stunnel
 #ciphers = HIGH:!DH:!aNULL:!SSLv2:!SSLv3
-ciphers = ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:HIGH:!DH:!aNULL:!SSLv2:!SSLv3
+ciphers = TLS_AES_128_GCM_SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:HIGH:!DH:!aNULL:!SSLv2:!SSLv3
 options = CIPHER_SERVER_PREFERENCE
 #options = DONT_INSERT_EMPTY_FRAGMENTS
 options = NO_SSLv3
@@ -156,12 +156,12 @@ pid = /var/run/stunnel/stunnel.pid
 output = /var/log/stunnel.log
 #output = /stunnel.log
 #debug = 7
-sslVersion = TLSv1.2
+#sslVersion = TLSv1.2
 
 setuid = stunnel
 setgid = stunnel
 #ciphers = HIGH:!DH:!aNULL:!SSLv2:!SSLv3
-ciphers = ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:HIGH:!DH:!aNULL:!SSLv2:!SSLv3
+ciphers = TLS_AES_128_GCM_SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:HIGH:!DH:!aNULL:!SSLv2:!SSLv3
 options = CIPHER_SERVER_PREFERENCE
 #options = DONT_INSERT_EMPTY_FRAGMENTS
 options = NO_SSLv3
