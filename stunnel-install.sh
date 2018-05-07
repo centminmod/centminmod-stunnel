@@ -15,7 +15,7 @@
 #########################################################
 # variables
 #############
-VER='0.6'
+VER='0.7'
 DT=$(date +"%d%m%y-%H%M%S")
 DIR_TMP='/svr-setup'
 
@@ -45,6 +45,10 @@ MARCH_TARGETNATIVE='n'
 # jemalloc
 STUNNEL_JEMALLOC='y'
 STUNNEL_JEMALLOCVER='5.0.1'
+# use custom zlib 1.2.11 or cloudflare zlib 1.2.8
+STUNNEL_CLOUDFLAREZLIB='y'
+STUNNEL_CLOUDFLAREZLIBVER='1.2.8'
+STUNNEL_CLOUDFLAREZLIBDEBUG='n'
 
 # ssl cert variables
 STUNNEL_HOSTNAME=$(hostname -f)
@@ -53,6 +57,7 @@ SELFSIGNEDSSL_ST='California'
 SELFSIGNEDSSL_L='Los Angeles'
 SELFSIGNEDSSL_O=''
 SELFSIGNEDSSL_OU=''
+CHECK_PCLMUL=$(gcc -c -Q -march=native --help=target | egrep '\[enabled\]|mtune|march' | grep 'mpclmul' | grep -o enabled)
 #########################################################
 # functions
 #############
@@ -66,6 +71,13 @@ fi
 if [ ! -d "$DIR_TMP" ]; then
   echo
   echo "error: Centmin Mod Install no detected"
+  echo
+  exit
+fi
+
+if [[ ! "$CHECK_PCLMUL" = 'enabled' ]]; then
+  echo
+  echo "error: AES-NI pclmul cpu instruction support not detected"
   echo
   exit
 fi
@@ -311,6 +323,67 @@ setup_stunnel() {
   echo
 }
 
+install_cfzlib() {
+  if [[ "$STUNNEL_CLOUDFLAREZLIB" = [yY] && "$(cat /proc/cpuinfo | grep -o 'sse4_2' | uniq)" = 'sse4_2' && "$CHECK_PCLMUL" = 'enabled' ]]; then
+    install_cfzlibstartdir=$(pwd)
+    echo
+    echo "install zlib cloudflare..."
+    echo
+    pushd "$DIR_TMP"
+    if [ ! -d "stunnel-zlib-cloudflare-${STUNNEL_CLOUDFLAREZLIBVER}" ]; then
+      git clone https://github.com/cloudflare/zlib "stunnel-zlib-cloudflare-${STUNNEL_CLOUDFLAREZLIBVER}"
+    elif [ -d "stunnel-zlib-cloudflare-${STUNNEL_CLOUDFLAREZLIBVER}/.git" ]; then
+      rm -rf "stunnel-zlib-cloudflare-${STUNNEL_CLOUDFLAREZLIBVER}"
+      git clone https://github.com/cloudflare/zlib "stunnel-zlib-cloudflare-${STUNNEL_CLOUDFLAREZLIBVER}"
+    fi
+    pushd "stunnel-zlib-cloudflare-${STUNNEL_CLOUDFLAREZLIBVER}"
+    # sed -i "s|\#define ZLIB_VERSION .*|\#define ZLIB_VERSION \"${STUNNEL_CLOUDFLAREZLIBVER}\"|" zlib.h
+    # ldconfig
+    make -f Makefile.in distclean
+    ./configure --prefix=${STUNNEL_LIBDIR}
+    # ./configure --prefix=${STUNNEL_LIBDIR} --static
+    make -j$(nproc)
+    # ps aufxwww > zlib-process.log
+    if [[ "$STUNNEL_CLOUDFLAREZLIBDEBUG" = [Yy] ]]; then
+      make -d install
+      cfzlib_check=$?
+      if [[ "$(uname -m)" = 'x86_64' ]]; then
+          ln -sf ${STUNNEL_LIBDIR}/lib ${STUNNEL_LIBDIR}/lib64
+      fi
+    else
+      make install
+      cfzlib_check=$?
+      if [[ "$(uname -m)" = 'x86_64' ]]; then
+          ln -sf ${STUNNEL_LIBDIR}/lib ${STUNNEL_LIBDIR}/lib64
+      fi
+    fi
+    popd
+    # cd $install_cfzlibstartdir
+    popd
+    echo
+    echo "zlib cloudflare installed"
+    echo
+  fi
+}
+
+install_stdzlib() {
+  echo
+  echo "install std zlib ..."
+  echo
+}
+
+install_zlib() {
+    if [[ "$STUNNEL_CLOUDFLAREZLIB" = [yY] && "$(cat /proc/cpuinfo | grep -o 'sse4_2' | uniq)" = 'sse4_2' && "$CHECK_PCLMUL" = 'enabled' ]]; then
+        install_cfzlib
+        if [[ "$cfzlib_check" -ne '0' ]]; then
+            STUNNEL_CLOUDFLAREZLIB='n'
+            install_stdzlib
+        fi
+    else
+        install_stdzlib
+    fi
+}
+
 install_jemalloc() {
   if [[ "$STUNNEL_JEMALLOC" = [yY] ]]; then
     echo
@@ -358,7 +431,7 @@ install_stunnel() {
   tar xzf "stunnel-${STUNNEL_VERSION}.tar.gz"
   cd stunnel-5.45
   make clean; make distclean
-  LDFLAGS="-Wl,-rpath -Wl,${STUNNEL_LIBDIR}/lib -ljemalloc" ./configure --with-ssl=${STUNNEL_LIBDIR}
+  LDFLAGS="-Wl,-rpath -Wl,${STUNNEL_LIBDIR}/lib -ljemalloc -lz" ./configure --with-ssl=${STUNNEL_LIBDIR}
   make -j$(nproc)
   make install
   
@@ -409,6 +482,7 @@ case $1 in
   install )
     install_openssl
     install_jemalloc
+    install_zlib
     install_stunnel
     setup_stunnel
     setup_csf
@@ -416,6 +490,7 @@ case $1 in
   update )
     install_openssl
     install_jemalloc
+    install_zlib
     install_stunnel
     systemctl daemon-reload
     systemctl restart stunnelx.service
@@ -428,6 +503,7 @@ case $1 in
   reinstall )
     install_openssl
     install_jemalloc
+    install_zlib
     install_stunnel
     setup_csf
     systemctl daemon-reload
