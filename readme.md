@@ -451,6 +451,56 @@ SET: 208594.06 requests per second
 GET: 223813.80 requests per second
 ```
 
+Centmin Mod LEMP stack currently uses `jemalloc` for MariaDB 10.0/10.1 MySQL, Redis server, custom built Nginx 1.13 or 1.14 binaries. So custom built stunnel is at home with `jemalloc` - though a new version 5.0.1 instead of system `jemalloc 3.6.0` version. Using `jemalloc` instead of `glibc` malloc for Nginx also lessens the negative performance impact of the [latest Linux Kernel KPTI + Retpoline Meltdown and Spectre vulnerability patches](https://community.centminmod.com/threads/linux-kernel-security-updates-for-spectre-meltdown-vulnerabilities.13648/) dropping the [KPTI performance overhead in Nginx from around 26% to 5.5%](https://community.centminmod.com/threads/nginx-benchmarks-after-centos-linux-kernel-kpti-meltdown-spectre-fixes.13694/).
+
+This server's OpenVZ 2.6.32 Kernel has KPTI patches enabled from `pti` in cpu flags list. So wonder if compiling stunnel with `jemalloc` boosted performance due to KPTI Kernel patches overhead ?
+
+```
+uname -r
+2.6.32-042stab128.2
+```
+
+```
+grep 'pti ' /proc/cpuinfo | uniq
+flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx lahf_lm ida arat epb pln pts dtherm pti retpoline tpr_shadow vnmi flexpriority ept vpid xsaveopt
+```
+
+```
+lsof | grep jemalloc
+mysqld      662           mysql  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+mysqld      662   715     mysql  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+mysqld      662   796     mysql  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+mysqld      662   813     mysql  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+mysqld      662   814     mysql  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+mysqld      662   815     mysql  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+mysqld      662   816     mysql  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+mysqld      662   817     mysql  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+mysqld      662   818     mysql  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+mysqld      662   819     mysql  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+mysqld      662   824     mysql  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+mysqld      662   825     mysql  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+mysqld      662   826     mysql  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+mysqld      662   827     mysql  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+mysqld      662   828     mysql  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+mysqld      662   829     mysql  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+mysqld      662   830     mysql  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+mysqld      662   831     mysql  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+mysqld      662   833     mysql  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+mysqld      662   834     mysql  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+mysqld      662   838     mysql  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+mysqld      662   842     mysql  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+mysqld      662  9832     mysql  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+redis-ser  2554           redis  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+redis-ser  2554  2555     redis  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+redis-ser  2554  2556     redis  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+redis-ser  2554  2557     redis  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+nginx     24823            root  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+nginx     24824           nginx  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+nginx     24826           nginx  mem       REG         182,160625    212096   2240459 /usr/lib64/libjemalloc.so.1
+stunnel   31347         stunnel  mem       REG         182,160625   3635232   2904765 /opt/stunnel-dep/lib/libjemalloc.so.2
+stunnel   31347 31348   stunnel  mem       REG         182,160625   3635232   2904765 /opt/stunnel-dep/lib/libjemalloc.so.2`
+```
+
 ## Redis Server Background Specs
 
 On 2 core Intel Xeon E5-2670v1 @2.60Ghz OpenVZ VPS server

@@ -15,7 +15,7 @@
 #########################################################
 # variables
 #############
-VER='0.7'
+VER='0.8'
 DT=$(date +"%d%m%y-%H%M%S")
 DIR_TMP='/svr-setup'
 
@@ -489,14 +489,17 @@ stunnel_check() {
 #########################################################
 case $1 in
   install )
+    {
     install_zlib
     install_openssl
     install_jemalloc
     install_stunnel
     setup_stunnel
     setup_csf
+    } 2>&1 | tee "${CENTMINLOGDIR}/stunnel-install_${DT}.log"
     ;;
   update )
+    {
     install_zlib
     install_openssl
     install_jemalloc
@@ -505,11 +508,15 @@ case $1 in
     systemctl restart stunnelx.service
     echo
     systemctl status stunnelx.service
+    } 2>&1 | tee "${CENTMINLOGDIR}/stunnel-update_${DT}.log"
     ;;
   update-certs )
+    {
     setup_stunnel
+    } 2>&1 | tee "${CENTMINLOGDIR}/stunnel-update-certs_${DT}.log"
     ;;
   reinstall )
+    {
     install_zlib
     install_openssl
     install_jemalloc
@@ -519,12 +526,17 @@ case $1 in
     systemctl restart stunnelx.service
     echo
     systemctl status stunnelx.service
+    } 2>&1 | tee "${CENTMINLOGDIR}/stunnel-reinstall_${DT}.log"
     ;;
   check )
+    {
     stunnel_check
+    } 2>&1 | tee "${CENTMINLOGDIR}/stunnel-check_${DT}.log"
     ;;
   openssl )
+    {
     install_openssl
+    } 2>&1 | tee "${CENTMINLOGDIR}/stunnel-openssl_${DT}.log"
     ;;
   * )
     echo
