@@ -125,10 +125,11 @@ install_openssl() {
   CFLAGS="-march=${MARCH_TARGET} -fuse-ld=gold${EXTRA_CFLAGS}"
   CXXFLAGS="$CFLAGS"
   if [ "$STUNNEL_OPENSSLTLSTHREE" = [yY] ]; then
-    ./config $CFLAGS -Wl,--enable-new-dtags,-rpath=${s_openssldir}/lib --prefix=${s_openssldir} --openssldir=${s_openssldir} shared enable-ec_nistp_64_gcc_128 enable-tls1_3
+    ./config $CFLAGS -Wl,--enable-new-dtags,-rpath=${s_openssldir}/lib -lz --prefix=${s_openssldir} --openssldir=${s_openssldir} shared enable-ec_nistp_64_gcc_128 enable-zlib enable-tls1_3
   else
-    ./config $CFLAGS -Wl,--enable-new-dtags,-rpath=${s_openssldir}/lib --prefix=${s_openssldir} --openssldir=${s_openssldir} shared enable-ec_nistp_64_gcc_128
+    ./config $CFLAGS -Wl,--enable-new-dtags,-rpath=${s_openssldir}/lib -lz --prefix=${s_openssldir} --openssldir=${s_openssldir} shared enable-ec_nistp_64_gcc_128 enable-zlib
   fi
+  perl configdata.pm --dump
   make -j$(nproc)
   # make certs
   make install
@@ -431,7 +432,7 @@ install_stunnel() {
   tar xzf "stunnel-${STUNNEL_VERSION}.tar.gz"
   cd stunnel-5.45
   make clean; make distclean
-  LDFLAGS="-Wl,-rpath -Wl,${STUNNEL_LIBDIR}/lib -ljemalloc -lz" ./configure --with-ssl=${STUNNEL_LIBDIR}
+  LDFLAGS="-Wl,-rpath -Wl,${STUNNEL_LIBDIR}/lib -ljemalloc" ./configure --with-ssl=${STUNNEL_LIBDIR}
   make -j$(nproc)
   make install
   
@@ -480,17 +481,17 @@ stunnel_check() {
 #########################################################
 case $1 in
   install )
+    install_zlib
     install_openssl
     install_jemalloc
-    install_zlib
     install_stunnel
     setup_stunnel
     setup_csf
     ;;
   update )
+    install_zlib
     install_openssl
     install_jemalloc
-    install_zlib
     install_stunnel
     systemctl daemon-reload
     systemctl restart stunnelx.service
@@ -501,9 +502,9 @@ case $1 in
     setup_stunnel
     ;;
   reinstall )
+    install_zlib
     install_openssl
     install_jemalloc
-    install_zlib
     install_stunnel
     setup_csf
     systemctl daemon-reload
