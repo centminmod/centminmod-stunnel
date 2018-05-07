@@ -393,6 +393,51 @@ install_zlib() {
     fi
 }
 
+jemalloc_printstats() {
+  # https://github.com/jemalloc/jemalloc/wiki/Use-Case:-Basic-Allocator-Statistics
+  if [[ ! -f /usr/bin/jemalloc5-stats && -f /opt/stunnel-dep/bin/jemalloc.sh ]]; then
+    JEMALLOC_PATH='/opt/stunnel-dep'
+    mkdir -p /root/tools
+    JEMSTATS_CFILE='/root/tools/jemalloc5_stats_print.c'
+    JEMSTATS_FILE='/root/tools/jemalloc5_stats_print'
+
+cat >"$JEMSTATS_CFILE" <<JEM
+#include <stdlib.h>
+#include <jemalloc/jemalloc.h>
+
+void
+do_something(size_t i)
+{
+
+        // Leak some memory.
+        malloc(i * 100);
+}
+
+int
+main(int argc, char **argv)
+{
+        size_t i;
+
+        for (i = 0; i < 1000; i++) {
+                do_something(i);
+        }
+
+        // Dump allocator statistics to stderr.
+        malloc_stats_print(NULL, NULL, NULL);
+
+        return (0);
+}
+JEM
+
+  gcc "$JEMSTATS_CFILE" -o $JEMSTATS_FILE -I${JEMALLOC_PATH}/include -L${JEMALLOC_PATH}/lib -Wl,-rpath,${JEMALLOC_PATH}/lib -ljemalloc
+  if [ -f "$JEMSTATS_FILE" ]; then
+    ln -sf "$JEMSTATS_FILE" /usr/bin/jemalloc5-stats
+    chmod 0700 /usr/bin/jemalloc5-stats
+  fi
+
+  fi
+}
+
 install_jemalloc() {
   if [[ "$STUNNEL_JEMALLOC" = [yY] ]]; then
     echo
@@ -422,6 +467,7 @@ install_jemalloc() {
     make install_lib_pc
     echo "/opt/stunnel-dep/bin/jemalloc-config --version"
     /opt/stunnel-dep/bin/jemalloc-config --version
+    jemalloc_printstats
     echo
   fi
 }

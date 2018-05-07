@@ -501,6 +501,116 @@ stunnel   31347         stunnel  mem       REG         182,160625   3635232   29
 stunnel   31347 31348   stunnel  mem       REG         182,160625   3635232   2904765 /opt/stunnel-dep/lib/libjemalloc.so.2`
 ```
 
+`jemalloc 5.0.1` stats
+
+```
+jemalloc5-stats                                 
+___ Begin jemalloc statistics ___
+Version: 5.0.1-0-g1
+Assertions disabled
+config.malloc_conf: ""
+Run-time option settings:
+  opt.abort: false
+  opt.abort_conf: false
+  opt.retain: true
+  opt.dss: "secondary"
+  opt.narenas: 8
+  opt.percpu_arena: "disabled"
+  opt.background_thread: false (background_thread: false)
+  opt.dirty_decay_ms: 10000 (arenas.dirty_decay_ms: 10000)
+  opt.muzzy_decay_ms: 10000 (arenas.muzzy_decay_ms: 10000)
+  opt.junk: "false"
+  opt.zero: false
+  opt.tcache: true
+  opt.lg_tcache_max: 15
+  opt.stats_print: false
+Arenas: 8
+Quantum size: 16
+Page size: 4096
+Maximum thread-cached size class: 32768
+Allocated: 55261928, active: 58871808, metadata: 2495768, resident: 61345792, mapped: 65163264, retained: 7188480
+                           n_lock_ops       n_waiting      n_spin_acq  n_owner_switch   total_wait_ns     max_wait_ns  max_n_thds
+background_thread:                  4               0               0               1               0               0           0
+ctl:                                2               0               0               1               0               0           0
+prof:                               0               0               0               0               0               0           0
+
+arenas[0]:
+assigned threads: 1
+uptime: 999989
+dss allocation precedence: secondary
+decaying:  time       npages       sweeps     madvises       purged
+   dirty: 10000            0            0            0            0
+   muzzy: 10000            0            0            0            0
+                            allocated      nmalloc      ndalloc    nrequests
+small:                        1682152          851            0           61
+large:                       53579776          857            0          857
+total:                       55261928         1708            0          918
+active:                      58871808
+mapped:                      65163264
+retained:                     7188480
+base:                         2467088
+internal:                       28680
+tcache:                        559464
+resident:                    61345792
+                           n_lock_ops       n_waiting      n_spin_acq  n_owner_switch   total_wait_ns     max_wait_ns  max_n_thds
+large:                              2               0               0               1               0               0           0
+extent_avail:                     981               0               0               3               0               0           0
+extents_dirty:                    972               0               0               3               0               0           0
+extents_muzzy:                    972               0               0               3               0               0           0
+extents_retained:                1940               0               0               3               0               0           0
+decay_dirty:                        2               0               0               1               0               0           0
+decay_muzzy:                        2               0               0               1               0               0           0
+base:                            1000               0               0               3               0               0           0
+tcache_list:                        3               0               0               1               0               0           0
+bins:           size ind    allocated      nmalloc      ndalloc    nrequests      curregs     curslabs regs pgs  util       nfills     nflushes     newslabs      reslabs   n_lock_ops    n_waiting   n_spin_acq  total_wait_ns  max_wait_ns
+                   8   0          808          101            0            1          101            1  512   1 0.197            1            0            1            0            5            0            0              0            0
+                     ---
+                  32   2         3200          100            0            0          100            1  128   1 0.781            1            0            1            0            4            0            0              0            0
+                     ---
+                 112   7        11200          100            0            0          100            1  256   7 0.390            1            0            1            0            4            0            0              0            0
+                     ---
+                 224  11        22400          100            0            0          100            1  128   7 0.781            1            0            1            0            4            0            0              0            0
+                     ---
+                 320  13        20480           64            0            0           64            1   64   5 1                1            0            1            0            4            0            0              0            0
+                     ---
+                 448  15        28672           64            0            0           64            1   64   7 1                1            0            1            0            4            0            0              0            0
+                 512  16         5120           10            0            0           10            2    8   1 0.625            1            0            2            0            5            0            0              0            0
+                 640  17        20480           32            0            0           32            1   32   5 1                1            0            1            0            4            0            0              0            0
+                 768  18        12288           16            0            0           16            1   16   3 1                1            0            1            0            4            0            0              0            0
+                 896  19        28672           32            0            0           32            1   32   7 1                1            0            1            0            4            0            0              0            0
+                1024  20        10240           10            0            0           10            3    4   1 0.833            1            0            3            0            6            0            0              0            0
+                1280  21        20480           16            0            0           16            1   16   5 1                1            0            1            0            4            0            0              0            0
+                1536  22        15360           10            0            0           10            2    8   3 0.625            1            0            2            0            5            0            0              0            0
+                1792  23        28672           16            0            0           16            1   16   7 1                1            0            1            0            4            0            0              0            0
+                2048  24        20480           10            0            0           10            5    2   1 1                1            0            5            0            8            0            0              0            0
+                2560  25        25600           10            0            0           10            2    8   5 0.625            1            0            2            0            5            0            0              0            0
+                3072  26        30720           10            0            0           10            3    4   3 0.833            1            0            3            0            6            0            0              0            0
+                3584  27        35840           10            0            0           10            2    8   7 0.625            1            0            2            0            5            0            0              0            0
+                4096  28        40960           10            0            0           10           10    1   1 1                1            0           10            0           13            0            0              0            0
+                5120  29       102400           20            0           10           20            5    4   5 1                2            0            5            0            9            0            0              0            0
+                6144  30        61440           10            0            0           10            5    2   3 1                1            0            5            0            8            0            0              0            0
+                7168  31        71680           10            0            0           10            3    4   7 0.833            1            0            3            0            6            0            0              0            0
+                8192  32        81920           10            0            0           10           10    1   2 1                1            0           10            0           13            0            0              0            0
+               10240  33       307200           30            0           20           30           15    2   5 1                3            0           15            0           20            0            0              0            0
+               12288  34       245760           20            0           10           20           20    1   3 1                2            0           20            0           24            0            0              0            0
+               14336  35       430080           30            0           20           30           15    2   7 1                3            0           15            0           20            0            0              0            0
+large:          size ind    allocated      nmalloc      ndalloc    nrequests  curlextents
+               16384  36       327680           20            0           20           20
+               20480  37       839680           41            0           41           41
+               24576  38      1007616           41            0           41           41
+               28672  39      1204224           42            0           42           42
+               32768  40      1343488           41            0           41           41
+               40960  41      3358720           82            0           82           82
+               49152  42      4030464           82            0           82           82
+               57344  43      4702208           82            0           82           82
+               65536  44      5373952           82            0           82           82
+               81920  45     13434880          164            0          164          164
+               98304  46     16121856          164            0          164          164
+              114688  47      1835008           16            0           16           16
+                     ---
+--- End jemalloc statistics ---
+```
+
 ## Redis Server Background Specs
 
 On 2 core Intel Xeon E5-2670v1 @2.60Ghz OpenVZ VPS server
