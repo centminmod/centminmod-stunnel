@@ -15,7 +15,7 @@
 #########################################################
 # variables
 #############
-VER='0.8'
+VER='0.9'
 DT=$(date +"%d%m%y-%H%M%S")
 DIR_TMP='/svr-setup'
 
@@ -55,8 +55,8 @@ STUNNEL_HOSTNAME=$(hostname -f)
 SELFSIGNEDSSL_C='US'
 SELFSIGNEDSSL_ST='California'
 SELFSIGNEDSSL_L='Los Angeles'
-SELFSIGNEDSSL_O=''
-SELFSIGNEDSSL_OU=''
+SELFSIGNEDSSL_O='Org'
+SELFSIGNEDSSL_OU='Or Unit'
 CHECK_PCLMUL=$(gcc -c -Q -march=native --help=target | egrep '\[enabled\]|mtune|march' | grep 'mpclmul' | grep -o enabled)
 #########################################################
 # functions
@@ -227,7 +227,8 @@ setup_peercerts() {
   if [[ "$STUNNEL_CERTTYPE" = 'ecdsa' ]]; then
     # server
     openssl ecparam -out server.key -name prime256v1 -genkey
-    openssl req -new -x509 -nodes -days 3650 -key server.key -out server.crt -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
+    openssl req -new -key server.key -sha256 -nodes -out server.csr -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
+    openssl req -x509 -nodes -days ${STUNNEL_CERTEXPIRY} -in server.csr -key server.key -out server.crt
     openssl x509 -in server.crt -text -noout
     chmod 0600 server.key
     cat server.key > server.pem
@@ -236,7 +237,8 @@ setup_peercerts() {
 
     # client
     openssl ecparam -out client.key -name prime256v1 -genkey
-    openssl req -new -x509 -nodes -days 3650 -key client.key -out client.crt -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
+    openssl req -new -key client.key -sha256 -nodes -out client.csr -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
+    openssl req -x509 -nodes -days ${STUNNEL_CERTEXPIRY} -in client.csr -key client.key -out client.crt
     openssl x509 -in client.crt -text -noout
     chmod 0600 client.key
     cat client.key > client.pem
@@ -245,7 +247,8 @@ setup_peercerts() {
   else
     # server
     openssl genrsa -out server.key 2048
-    openssl req -new -x509 -nodes -days 3650 -key server.key -out server.crt -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
+    openssl req -new -key server.key -sha256 -nodes -out server.csr -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
+    openssl req -x509 -nodes -days ${STUNNEL_CERTEXPIRY} -in server.csr -key server.key -out server.crt
     openssl x509 -in server.crt -text -noout
     chmod 0600 server.key
     cat server.key > server.pem
@@ -254,7 +257,8 @@ setup_peercerts() {
 
     # client
     openssl genrsa -out client.key 2048
-    openssl req -new -x509 -nodes -days 3650 -key client.key -out client.crt -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
+    openssl req -new -key client.key -sha256 -nodes -out client.csr -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
+    openssl req -x509 -nodes -days ${STUNNEL_CERTEXPIRY} -in client.csr -key client.key -out client.crt
     openssl x509 -in client.crt -text -noout
     chmod 0600 client.key
     cat client.key > client.pem
@@ -271,7 +275,8 @@ setup_stunnel() {
     pushd /etc/pki/tls/certs/
     umask 77
     openssl ecparam -out stunnel.key -name prime256v1 -genkey
-    openssl req -new -x509 -nodes -days ${STUNNEL_CERTEXPIRY} -key stunnel.key -out stunnel.crt -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
+    openssl req -new -key stunnel.key -sha256 -nodes -out stunnel.csr -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
+    openssl req -x509 -nodes -days ${STUNNEL_CERTEXPIRY} -in stunnel.csr -key stunnel.key -out stunnel.crt
     openssl x509 -in stunnel.crt -text -noout
     chmod 0600 stunnel.key
     cat stunnel.key > stunnel.pem
@@ -285,13 +290,14 @@ setup_stunnel() {
     echo "creating rsa based /etc/pki/tls/certs/stunnel.pem"
     pushd /etc/pki/tls/certs/
     umask 77
-    PEM1='stunnel.key'
-    PEM2='stunnel.crt'
-    openssl req -newkey rsa:2048 -keyout $PEM1 -nodes -x509 -days ${STUNNEL_CERTEXPIRY} -out $PEM2 -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
-    cat $PEM1 > stunnel.pem
+    openssl genrsa -out stunnel.key 2048
+    openssl req -new -key stunnel.key -sha256 -nodes -out stunnel.csr -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
+    openssl req -x509 -nodes -days ${STUNNEL_CERTEXPIRY} -in stunnel.csr -key stunnel.key -out stunnel.crt
+    openssl x509 -in stunnel.crt -text -noout
+    chmod 0600 stunnel.key
+    cat stunnel.key > stunnel.pem
     echo "" >> stunnel.pem
-    cat $PEM2 >> stunnel.pem
-    # rm -f $PEM1 $PEM2
+    cat stunnel.crt >> stunnel.pem   
     popd
     echo "created rsa based /etc/pki/tls/certs/stunnel.pem"
   fi
