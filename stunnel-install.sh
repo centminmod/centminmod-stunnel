@@ -127,7 +127,7 @@ install_openssl() {
   cd "openssl-${STUNNEL_OPENSSLVER}"
   make clean; make distclean
   s_openssldir="$STUNNEL_LIBDIR"
-  CFLAGS="-march=${MARCH_TARGET} -fuse-ld=gold${EXTRA_CFLAGS}"
+  CFLAGS="-march=${MARCH_TARGET} -fuse-ld=gold${EXTRA_CFLAGS} -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-strong --param=ssp-buffer-size=4"
   CXXFLAGS="$CFLAGS"
   if [ "$STUNNEL_OPENSSLTLSTHREE" = [yY] ]; then
     ./config $CFLAGS -Wl,--enable-new-dtags,-rpath=${s_openssldir}/lib -lz --prefix=${s_openssldir} --openssldir=${s_openssldir} shared enable-ec_nistp_64_gcc_128 enable-zlib enable-tls1_3
