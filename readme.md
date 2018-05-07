@@ -130,12 +130,12 @@ options = PRIORITIZE_CHACHA
 ```
 /opt/stunnel-dep/bin/openssl version -a
 OpenSSL 1.1.1-pre6 (beta) 1 May 2018
-built on: Sat May  5 07:28:12 2018 UTC
+built on: Mon May  7 08:48:34 2018 UTC
 platform: linux-x86_64
 options:  bn(64,64) rc4(16x,int) des(int) idea(int) blowfish(ptr) 
-compiler: ccache gcc -fPIC -pthread -m64  -Wa,--noexecstack -Wall -O3 -march=x86-64 -fuse-ld=gold -Wimplicit-fallthrough=0 -fcode-hoisting -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_CPUID_OBJ -DOPENSSL_IA32_SSE2 -DOPENSSL_BN_ASM_MONT -DOPENSSL_BN_ASM_MONT5 -DOPENSSL_BN_ASM_GF2m -DSHA1_ASM -DSHA256_ASM -DSHA512_ASM -DKECCAK1600_ASM -DRC4_ASM -DMD5_ASM -DAES_ASM -DVPAES_ASM -DBSAES_ASM -DGHASH_ASM -DECP_NISTZ256_ASM -DX25519_ASM -DPADLOCK_ASM -DPOLY1305_ASM -DNDEBUG
+compiler: ccache gcc -fPIC -pthread -m64  -Wa,--noexecstack -Wall -O3 -march=x86-64 -fuse-ld=gold -Wimplicit-fallthrough=0 -fcode-hoisting -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_CPUID_OBJ -DOPENSSL_IA32_SSE2 -DOPENSSL_BN_ASM_MONT -DOPENSSL_BN_ASM_MONT5 -DOPENSSL_BN_ASM_GF2m -DSHA1_ASM -DSHA256_ASM -DSHA512_ASM -DKECCAK1600_ASM -DRC4_ASM -DMD5_ASM -DAES_ASM -DVPAES_ASM -DBSAES_ASM -DGHASH_ASM -DECP_NISTZ256_ASM -DX25519_ASM -DPADLOCK_ASM -DPOLY1305_ASM -DZLIB -DNDEBUG
 OPENSSLDIR: "/opt/stunnel-dep"
-ENGINESDIR: "/opt/stunnel-dep/lib/engines-1.1"
+ENGINESDIR: "/opt/stunnel-dep/lib64/engines-1.1"
 Seeding source: os-specific
 ```
 

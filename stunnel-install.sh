@@ -328,6 +328,12 @@ setup_stunnel() {
 
 install_cfzlib() {
   if [[ "$STUNNEL_CLOUDFLAREZLIB" = [yY] && "$(cat /proc/cpuinfo | grep -o 'sse4_2' | uniq)" = 'sse4_2' && "$CHECK_PCLMUL" = 'enabled' ]]; then
+    if [[ -f /opt/rh/devtoolset-7/root/usr/bin/gcc && -f /opt/rh/devtoolset-7/root/usr/bin/g++ ]]; then
+      source /opt/rh/devtoolset-7/enable
+      EXTRA_CFLAGS=" -Wimplicit-fallthrough=0 -fcode-hoisting"
+      export CFLAGS="-march=${MARCH_TARGET} -fuse-ld=gold${EXTRA_CFLAGS}"
+      export CXXFLAGS="$CFLAGS"
+    fi
     install_cfzlibstartdir=$(pwd)
     echo
     echo "install zlib cloudflare..."
