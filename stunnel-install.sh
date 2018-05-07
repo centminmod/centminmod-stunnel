@@ -58,6 +58,7 @@ SELFSIGNEDSSL_L='Los Angeles'
 SELFSIGNEDSSL_O='Org'
 SELFSIGNEDSSL_OU='Or Unit'
 CHECK_PCLMUL=$(gcc -c -Q -march=native --help=target | egrep '\[enabled\]|mtune|march' | grep 'mpclmul' | grep -o enabled)
+CENTMINLOGDIR='/root/centminlogs'
 #########################################################
 # functions
 #############
@@ -86,6 +87,10 @@ if [[ "$MARCH_TARGETNATIVE" = [yY] ]]; then
   MARCH_TARGET='native'
 else
   MARCH_TARGET='x86-64'
+fi
+
+if [ ! -d /etc/stunnel ]; then
+  mkdir -p /etc/stunnel
 fi
 
 setup_csf() {
@@ -140,7 +145,7 @@ setup_configfile() {
 # server config
 cat > /etc/stunnel/stunnel.conf <<EOF
 # chroot = /var/run/stunnel
-cert = /etc/pki/tls/certs/stunnel.pem
+cert = /etc/stunnel/stunnel.pem
 pid = /var/run/stunnel/stunnel.pid
 #pid = /stunnel.pid
 output = /var/log/stunnel.log
@@ -167,8 +172,8 @@ client = no
 #foreground = yes
 accept = ${STUNNEL_REDISSERVERCACCEPTPORT}
 connect = 127.0.0.1:${STUNNEL_REDISSERVERCCONNECTPORT}
-cert = /etc/pki/tls/certs/stunnel.pem
-CAfile = /etc/pki/tls/certs/stunnel.pem
+cert = /etc/stunnel/stunnel.pem
+CAfile = /etc/stunnel/stunnel.pem
 verify = 3
 sessionCacheSize = 50000
 sessionCacheTimeout = 300
@@ -178,7 +183,7 @@ client = yes
 #foreground = yes
 accept = 127.0.0.1:${STUNNEL_REDISCLIENTCACCEPTPORT}
 connect = ${REDIS_REMOTEIP:-127.0.0.1}:${STUNNEL_REDISCLIENTCCONNECTPORT}
-CAfile = /etc/pki/tls/certs/stunnel.pem
+CAfile = /etc/stunnel/stunnel.pem
 verify = 3
 sessionCacheSize = 50000
 sessionCacheTimeout = 300
@@ -187,7 +192,7 @@ EOF
 # client config
 cat > /etc/stunnel/stunnel.conf <<EOF
 # chroot = /var/run/stunnel
-cert = /etc/pki/tls/certs/stunnel.pem
+cert = /etc/stunnel/stunnel.pem
 pid = /var/run/stunnel/stunnel.pid
 #pid = /stunnel.pid
 output = /var/log/stunnel.log
@@ -214,7 +219,7 @@ client = yes
 #foreground = yes
 accept = 127.0.0.1:${STUNNEL_REDISCLIENTCACCEPTPORT}
 connect = ${REDIS_REMOTEIP:-127.0.0.1}:${STUNNEL_REDISCLIENTCCONNECTPORT}
-CAfile = /etc/pki/tls/certs/stunnel.pem
+CAfile = /etc/stunnel/stunnel.pem
 verify = 3
 sessionCacheSize = 50000
 sessionCacheTimeout = 300
@@ -271,8 +276,8 @@ setup_peercerts() {
 setup_stunnel() {
   if [[ "$STUNNEL_CERTTYPE" = 'ecdsa' ]]; then
     # create stunnel.pem
-    echo "creating ecdsa based /etc/pki/tls/certs/stunnel.pem"
-    pushd /etc/pki/tls/certs/
+    echo "creating ecdsa based /etc/stunnel/stunnel.pem"
+    pushd /etc/stunnel/
     umask 77
     openssl ecparam -out stunnel.key -name prime256v1 -genkey
     openssl req -new -key stunnel.key -sha256 -nodes -out stunnel.csr -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
@@ -284,11 +289,11 @@ setup_stunnel() {
     cat stunnel.crt >> stunnel.pem
     # rm -f stunnel.key stunnel.crt
     popd
-    echo "created ecdsa based /etc/pki/tls/certs/stunnel.pem"
+    echo "created ecdsa based /etc/stunnel/stunnel.pem"
   else
     # create stunnel.pem
-    echo "creating rsa based /etc/pki/tls/certs/stunnel.pem"
-    pushd /etc/pki/tls/certs/
+    echo "creating rsa based /etc/stunnel/stunnel.pem"
+    pushd /etc/stunnel/
     umask 77
     openssl genrsa -out stunnel.key 2048
     openssl req -new -key stunnel.key -sha256 -nodes -out stunnel.csr -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
@@ -299,7 +304,7 @@ setup_stunnel() {
     echo "" >> stunnel.pem
     cat stunnel.crt >> stunnel.pem   
     popd
-    echo "created rsa based /etc/pki/tls/certs/stunnel.pem"
+    echo "created rsa based /etc/stunnel/stunnel.pem"
   fi
   # Create dhparam
   echo
@@ -307,9 +312,9 @@ setup_stunnel() {
   openssl dhparam -out dhparam.pem 2048
   cat dhparam.pem >> stunnel.pem
   echo
-  echo "check /etc/pki/tls/certs/stunnel.pem"
-  echo "openssl x509 -in /etc/pki/tls/certs/stunnel.pem -text -noout"
-  openssl x509 -in /etc/pki/tls/certs/stunnel.pem -text -noout
+  echo "check /etc/stunnel/stunnel.pem"
+  echo "openssl x509 -in /etc/stunnel/stunnel.pem -text -noout"
+  openssl x509 -in /etc/stunnel/stunnel.pem -text -noout
   echo
   setup_peercerts
   setup_configfile
@@ -322,8 +327,8 @@ setup_stunnel() {
     echo "Check Redis profile connection"
     # echo "echo -n | /opt/stunnel-dep/bin/openssl -CAfile /etc/stunnel/server.pem -cert /etc/stunnel/server.crt -key /etc/stunnel/server.key"
     # echo -n | /opt/stunnel-dep/bin/openssl -CAfile /etc/stunnel/server.pem -cert /etc/stunnel/server.crt -key /etc/stunnel/server.key
-    echo "echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/pki/tls/certs/stunnel.pem"
-    echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/pki/tls/certs/stunnel.pem
+    echo "echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/stunnel/stunnel.pem"
+    echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/stunnel/stunnel.pem
   fi
   echo
   systemctl status stunnelx.service
