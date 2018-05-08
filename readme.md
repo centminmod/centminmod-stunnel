@@ -140,7 +140,7 @@ Seeding source: os-specific
 ```
 
 ```
-openssl x509 -in /etc/pki/tls/certs/stunnel.pem -text -noout
+openssl x509 -in /etc/stunnel/stunnel.pem -text -noout
 Certificate:
     Data:
         Version: 3 (0x2)
@@ -283,7 +283,7 @@ GET: 827814.62 requests per second
 Redis via stunnel port 8379 with ECC 256bit ECDSA SSL certs and `TLS 1.2` - `AES 256bit`
 
 ```
-echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/pki/tls/certs/stunnel.pem 2>&1 | grep -A2 'SSL-Session:'
+echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/stunnel/stunnel.pem 2>&1 | grep -A2 'SSL-Session:'
 SSL-Session:
     Protocol  : TLSv1.2
     Cipher    : ECDHE-ECDSA-AES256-GCM-SHA384
@@ -306,7 +306,7 @@ GET: 156494.53 requests per second
 Redis via stunnel port 8379 with RSA 2048bit Standard SSL certs and `TLS 1.2` - `AES 256bit`
 
 ```
-echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/pki/tls/certs/stunnel.pem 2>&1 | grep -A2 'SSL-Session:'
+echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/stunnel/stunnel.pem 2>&1 | grep -A2 'SSL-Session:'
 SSL-Session:
     Protocol  : TLSv1.2
     Cipher    : ECDHE-RSA-AES256-GCM-SHA384
@@ -331,7 +331,7 @@ GET: 161655.36 requests per second
 Redis via stunnel port 8379 with ECC 256bit ECDSA SSL certs and `TLS 1.2` - `AES 128bit`
 
 ```
-echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/pki/tls/certs/stunnel.pem 2>&1 | grep -A2 'SSL-Session:'
+echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/stunnel/stunnel.pem 2>&1 | grep -A2 'SSL-Session:'
 SSL-Session:
     Protocol  : TLSv1.2
     Cipher    : ECDHE-ECDSA-AES128-GCM-SHA256
@@ -354,7 +354,7 @@ GET: 173250.17 requests per second
 Redis via stunnel port 8379 with RSA 2048bit Standard SSL certs and `TLS 1.2` - `AES 128bit`
 
 ```
-echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/pki/tls/certs/stunnel.pem 2>&1 | grep -A2 'SSL-Session:'
+echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/stunnel/stunnel.pem 2>&1 | grep -A2 'SSL-Session:'
 SSL-Session:
     Protocol  : TLSv1.2
     Cipher    : ECDHE-RSA-AES128-GCM-SHA256
@@ -391,7 +391,7 @@ TLSv1.3 ciphersuite: TLS_AES_256_GCM_SHA384 (256-bit
 ```
 
 ```
-echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/pki/tls/certs/stunnel.pem 2>&1 | grep -A2 'SSL-Session:'
+echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/stunnel/stunnel.pem 2>&1 | grep -A2 'SSL-Session:'
 SSL-Session:
     Protocol  : TLSv1.3
     Cipher    : TLS_AES_256_GCM_SHA384
