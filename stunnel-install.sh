@@ -151,7 +151,7 @@ pid = /var/run/stunnel/stunnel.pid
 #pid = /stunnel.pid
 output = /var/log/stunnel.log
 #output = /stunnel.log
-#debug = 7
+debug = 7
 #sslVersion = TLSv1.2
 
 setuid = stunnel
@@ -252,16 +252,22 @@ setup_peercerts() {
     echo 01 > crlnumber
     STUNNEL_CAHOSTNAME=$(echo $STUNNEL_HOSTNAME | awk -F '.' '{print "*."$2"."$3}')
     pwgen -1cnys 21 > passphrase.txt
+    echo "openssl ecparam -out /etc/myca/ca/private/ca.key -name prime256v1 -genkey"
     openssl ecparam -out /etc/myca/ca/private/ca.key -name prime256v1 -genkey
+    echo "openssl req -new -key /etc/myca/ca/private/ca.key -sha256 -nodes -out /etc/myca/ca/ca.csr -passout file:passphrase.txt -subj \"/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_CAHOSTNAME}\" -extensions v3_ca"
     openssl req -new -key /etc/myca/ca/private/ca.key -sha256 -nodes -out /etc/myca/ca/ca.csr -passout file:passphrase.txt -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_CAHOSTNAME}" -extensions v3_ca
+    echo "openssl req -x509 -days ${STUNNEL_CACERTEXPIRY} -config /etc/myca/ca/openssl.cnf -in /etc/myca/ca/ca.csr -key /etc/myca/ca/private/ca.key -out /etc/myca/ca/ca.crt"
     openssl req -x509 -days ${STUNNEL_CACERTEXPIRY} -config /etc/myca/ca/openssl.cnf -in /etc/myca/ca/ca.csr -key /etc/myca/ca/private/ca.key -out /etc/myca/ca/ca.crt
     echo
+    echo "openssl x509 -in /etc/myca/ca/ca.crt -text -noout"
     openssl x509 -in /etc/myca/ca/ca.crt -text -noout
     echo
+    echo "chmod 0400 /etc/myca/ca/private/ca.key"
     chmod 0400 /etc/myca/ca/private/ca.key
     cat /etc/myca/ca/private/ca.key > /etc/myca/ca/private/ca.pem
     echo "" >> /etc/myca/ca/private/ca.pem
     cat /etc/myca/ca/ca.crt >> /etc/myca/ca/private/ca.pem
+    chmod 0400 /etc/myca/ca/private/ca.pem
     echo
     echo "ca private key: /etc/myca/ca/private/ca.key"
     echo "ca cert: /etc/myca/ca/ca.crt"
@@ -272,16 +278,22 @@ setup_peercerts() {
 #openssl x509 -req -days ${STUNNEL_CACERTEXPIRY} -in /etc/myca/ca/ca.csr -CA /etc/myca/ca/ca.crt -CAkey /etc/myca/ca/private/ca.key -CAcreateserial -out /etc/myca/ca/ca.crt
 
     # server
+    echo "openssl ecparam -out server.key -name prime256v1 -genkey"
     openssl ecparam -out server.key -name prime256v1 -genkey
+    echo "openssl req -new -key server.key -sha256 -nodes -out server.csr -subj \"/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}\""
     openssl req -new -key server.key -sha256 -nodes -out server.csr -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
+    echo "openssl x509 -req -days ${STUNNEL_CERTEXPIRY} -in server.csr -CA /etc/myca/ca/ca.crt -CAkey /etc/myca/ca/private/ca.key -CAcreateserial -out server.crt"
     openssl x509 -req -days ${STUNNEL_CERTEXPIRY} -in server.csr -CA /etc/myca/ca/ca.crt -CAkey /etc/myca/ca/private/ca.key -CAcreateserial -out server.crt
     echo
+    echo "openssl x509 -in server.crt -text -noout"
     openssl x509 -in server.crt -text -noout
     echo
+    echo "chmod 0600 server.key"
     chmod 0600 server.key
     cat server.key > server.pem
     echo "" >> server.pem
     cat server.crt >> server.pem
+    echo "chmod 0600 server.pem"
     chmod 0600 server.pem
     echo
     echo "server private key: /etc/stunnel/server.key"
@@ -298,16 +310,22 @@ setup_peercerts() {
     fi
 
     # client
+    echo "openssl ecparam -out client.key -name prime256v1 -genkey"
     openssl ecparam -out client.key -name prime256v1 -genkey
+    echo "openssl req -new -key client.key -sha256 -nodes -out client.csr -subj \"/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}\""
     openssl req -new -key client.key -sha256 -nodes -out client.csr -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
+    echo "openssl x509 -req -days ${STUNNEL_CERTEXPIRY} -in client.csr -CA /etc/myca/ca/ca.crt -CAkey /etc/myca/ca/private/ca.key -CAcreateserial -out client.crt"
     openssl x509 -req -days ${STUNNEL_CERTEXPIRY} -in client.csr -CA /etc/myca/ca/ca.crt -CAkey /etc/myca/ca/private/ca.key -CAcreateserial -out client.crt
     echo
+    echo "openssl x509 -in client.crt -text -noout"
     openssl x509 -in client.crt -text -noout
     echo
+    echo "chmod 0600 client.key"
     chmod 0600 client.key
     cat client.key > client.pem
     echo "" >> client.pem
     cat client.crt >> client.pem
+    echo "chmod 0600 client.pem"
     chmod 0600 client.pem
     echo
     echo "client private key: /etc/stunnel/client.key"
@@ -342,16 +360,22 @@ setup_peercerts() {
     echo 01 > crlnumber
     STUNNEL_CAHOSTNAME=$(echo $STUNNEL_HOSTNAME | awk -F '.' '{print "*."$2"."$3}')
     pwgen -1cnys 21 > passphrase.txt
+    echo "openssl genrsa -out /etc/myca/ca/private/ca.key 2048"
     openssl genrsa -out /etc/myca/ca/private/ca.key 2048
+    echo "openssl req -new -key /etc/myca/ca/private/ca.key -sha256 -nodes -out /etc/myca/ca/ca.csr -passout file:passphrase.txt -subj \"/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_CAHOSTNAME}\" -extensions v3_ca"
     openssl req -new -key /etc/myca/ca/private/ca.key -sha256 -nodes -out /etc/myca/ca/ca.csr -passout file:passphrase.txt -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_CAHOSTNAME}" -extensions v3_ca
+    echo "openssl req -x509 -days ${STUNNEL_CACERTEXPIRY} -config /etc/myca/ca/openssl.cnf -in /etc/myca/ca/ca.csr -key /etc/myca/ca/private/ca.key -out /etc/myca/ca/ca.crt"
     openssl req -x509 -days ${STUNNEL_CACERTEXPIRY} -config /etc/myca/ca/openssl.cnf -in /etc/myca/ca/ca.csr -key /etc/myca/ca/private/ca.key -out /etc/myca/ca/ca.crt
     echo
+    echo "openssl x509 -in /etc/myca/ca/ca.crt -text -noout"
     openssl x509 -in /etc/myca/ca/ca.crt -text -noout
     echo
+    echo "chmod 0400 /etc/myca/ca/private/ca.key"
     chmod 0400 /etc/myca/ca/private/ca.key
     cat /etc/myca/ca/private/ca.key > /etc/myca/ca/private/ca.pem
     echo "" >> /etc/myca/ca/private/ca.pem
     cat /etc/myca/ca/ca.crt >> /etc/myca/ca/private/ca.pem
+    chmod 0400 /etc/myca/ca/private/ca.pem
     echo
     echo "ca private key: /etc/myca/ca/private/ca.key"
     echo "ca cert: /etc/myca/ca/ca.crt"
@@ -360,16 +384,22 @@ setup_peercerts() {
     echo
 
     # server
+    echo "openssl genrsa -out server.key 2048"
     openssl genrsa -out server.key 2048
+    echo "openssl req -new -key server.key -sha256 -nodes -out server.csr -subj \"/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}\""
     openssl req -new -key server.key -sha256 -nodes -out server.csr -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
+    echo "openssl x509 -req -days ${STUNNEL_CERTEXPIRY} -in server.csr -CA /etc/myca/ca/ca.crt -CAkey /etc/myca/ca/private/ca.key -CAcreateserial -out server.crt"
     openssl x509 -req -days ${STUNNEL_CERTEXPIRY} -in server.csr -CA /etc/myca/ca/ca.crt -CAkey /etc/myca/ca/private/ca.key -CAcreateserial -out server.crt
     echo
+    echo "openssl x509 -in server.crt -text -noout"
     openssl x509 -in server.crt -text -noout
     echo
+    echo "chmod 0600 server.key"
     chmod 0600 server.key
     cat server.key > server.pem
     echo "" >> server.pem
     cat server.crt >> server.pem
+    echo "chmod 0600 server.pem"
     chmod 0600 server.pem
     echo
     echo "server private key: /etc/stunnel/server.key"
@@ -386,16 +416,22 @@ setup_peercerts() {
     fi
 
     # client
+    echo "openssl genrsa -out client.key 2048"
     openssl genrsa -out client.key 2048
+    echo "openssl req -new -key client.key -sha256 -nodes -out client.csr -subj \"/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}\""
     openssl req -new -key client.key -sha256 -nodes -out client.csr -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
+    echo "openssl x509 -req -days ${STUNNEL_CERTEXPIRY} -in client.csr -CA /etc/myca/ca/ca.crt -CAkey /etc/myca/ca/private/ca.key -CAcreateserial -out client.crt"
     openssl x509 -req -days ${STUNNEL_CERTEXPIRY} -in client.csr -CA /etc/myca/ca/ca.crt -CAkey /etc/myca/ca/private/ca.key -CAcreateserial -out client.crt
     echo
+    echo "openssl x509 -in client.crt -text -noout"
     openssl x509 -in client.crt -text -noout
     echo
+    echo "chmod 0600 client.key"
     chmod 0600 client.key
     cat client.key > client.pem
     echo "" >> client.pem
     cat client.crt >> client.pem
+    echo "chmod 0600 client.pem"
     chmod 0600 client.pem
     echo
     echo "client private key: /etc/stunnel/client.key"
@@ -420,16 +456,21 @@ setup_stunnel() {
     echo "creating ecdsa based /etc/stunnel/stunnel.pem"
     pushd /etc/stunnel/
     umask 77
+    echo "openssl ecparam -out stunnel.key -name prime256v1 -genkey"
     openssl ecparam -out stunnel.key -name prime256v1 -genkey
     openssl req -new -key stunnel.key -sha256 -nodes -out stunnel.csr -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
+    echo "openssl req -x509 -nodes -days ${STUNNEL_CERTEXPIRY} -in stunnel.csr -key stunnel.key -out stunnel.crt"
     openssl req -x509 -nodes -days ${STUNNEL_CERTEXPIRY} -in stunnel.csr -key stunnel.key -out stunnel.crt
     echo
+    echo "openssl x509 -in stunnel.crt -text -noout"
     openssl x509 -in stunnel.crt -text -noout
     echo
+    echo "chmod 0600 stunnel.key"
     chmod 0600 stunnel.key
     cat stunnel.key > stunnel.pem
     echo "" >> stunnel.pem
     cat stunnel.crt >> stunnel.pem
+    echo "chmod 0600 stunnel.pem"
     chmod 0600 stunnel.pem
     echo
     echo "stunnel private key: /etc/stunnel/stunnel.key"
@@ -444,16 +485,21 @@ setup_stunnel() {
     echo "creating rsa based /etc/stunnel/stunnel.pem"
     pushd /etc/stunnel/
     umask 77
+    echo "openssl genrsa -out stunnel.key 2048"
     openssl genrsa -out stunnel.key 2048
     openssl req -new -key stunnel.key -sha256 -nodes -out stunnel.csr -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
+    echo "openssl req -x509 -nodes -days ${STUNNEL_CERTEXPIRY} -in stunnel.csr -key stunnel.key -out stunnel.crt"
     openssl req -x509 -nodes -days ${STUNNEL_CERTEXPIRY} -in stunnel.csr -key stunnel.key -out stunnel.crt
     echo
+    echo "openssl x509 -in stunnel.crt -text -noout"
     openssl x509 -in stunnel.crt -text -noout
     echo
+    echo "chmod 0600 stunnel.key"
     chmod 0600 stunnel.key
     cat stunnel.key > stunnel.pem
     echo "" >> stunnel.pem
     cat stunnel.crt >> stunnel.pem
+    echo "chmod 0600 stunnel.pem"
     chmod 0600 stunnel.pem
     echo
     echo "stunnel private key: /etc/stunnel/stunnel.key"
