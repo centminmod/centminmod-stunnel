@@ -465,11 +465,13 @@ setup_stunnel() {
     echo "created rsa based /etc/stunnel/stunnel.pem"
   fi
   # Create dhparam
-  echo
-  echo "openssl dhparam -out dhparam.pem 2048"
-  openssl dhparam -out dhparam.pem 2048
-  cat dhparam.pem >> stunnel.pem
-  echo
+  if [ ! -f dhparam.pem ]; then
+    echo
+    echo "openssl dhparam -out dhparam.pem 2048"
+    openssl dhparam -out dhparam.pem 2048
+    cat dhparam.pem >> stunnel.pem
+    echo
+  fi
   echo "check /etc/stunnel/stunnel.pem"
   echo "openssl x509 -in /etc/stunnel/stunnel.pem -text -noout"
   openssl x509 -in /etc/stunnel/stunnel.pem -text -noout
