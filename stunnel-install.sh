@@ -15,7 +15,7 @@
 #########################################################
 # variables
 #############
-VER='0.9'
+VER='1.0'
 DT=$(date +"%d%m%y-%H%M%S")
 DIR_TMP='/svr-setup'
 
@@ -27,6 +27,7 @@ STUNNEL_CLIENT='n'
 STUNNEL_CERTTYPE='ecdsa'
 # stunnel ssl cert expiry date default in days
 STUNNEL_CERTEXPIRY='3650'
+STUNNEL_CACERTEXPIRY='7300'
 # stunnel max open file descriptor limit
 STUNNEL_FD='1048576'
 # where openssl 1.1.1 libraries get installed
@@ -172,8 +173,8 @@ client = no
 #foreground = yes
 accept = ${STUNNEL_REDISSERVERCACCEPTPORT}
 connect = 127.0.0.1:${STUNNEL_REDISSERVERCCONNECTPORT}
-cert = /etc/stunnel/stunnel.pem
-CAfile = /etc/stunnel/stunnel.pem
+cert = /etc/stunnel/server.pem
+CAfile = /etc/myca/ca/private/ca.pem
 verify = 3
 sessionCacheSize = 50000
 sessionCacheTimeout = 300
@@ -183,7 +184,8 @@ client = yes
 #foreground = yes
 accept = 127.0.0.1:${STUNNEL_REDISCLIENTCACCEPTPORT}
 connect = ${REDIS_REMOTEIP:-127.0.0.1}:${STUNNEL_REDISCLIENTCCONNECTPORT}
-CAfile = /etc/stunnel/stunnel.pem
+cert = /etc/stunnel/server.pem
+CAfile = /etc/myca/ca/private/ca.pem
 verify = 3
 sessionCacheSize = 50000
 sessionCacheTimeout = 300
@@ -219,7 +221,8 @@ client = yes
 #foreground = yes
 accept = 127.0.0.1:${STUNNEL_REDISCLIENTCACCEPTPORT}
 connect = ${REDIS_REMOTEIP:-127.0.0.1}:${STUNNEL_REDISCLIENTCCONNECTPORT}
-CAfile = /etc/stunnel/stunnel.pem
+cert = /etc/stunnel/server.pem
+CAfile = /etc/myca/ca/private/ca.pem
 verify = 3
 sessionCacheSize = 50000
 sessionCacheTimeout = 300
@@ -230,45 +233,175 @@ EOF
 setup_peercerts() {
   pushd /etc/stunnel
   if [[ "$STUNNEL_CERTTYPE" = 'ecdsa' ]]; then
+    # ca at /etc/myca/ca/root-ca
+    mkdir -p /etc/myca/ca
+    cd /etc/myca/ca
+    mkdir -p private db crl certs newcerts
+    chmod 700 private
+    \cp -af /etc/pki/tls/openssl.cnf /etc/myca/ca/openssl.cnf
+    sed -i 's|= /etc/pki/CA|= /etc/myca/ca|' /etc/myca/ca/openssl.cnf
+    sed -i "s|= XX|= US|" /etc/myca/ca/openssl.cnf
+    sed -i "s|#stateOrProvinceName_default    = Default Province|stateOrProvinceName_default    = California|" /etc/myca/ca/openssl.cnf
+    sed -i "s|localityName_default            = Default City|localityName_default            = \"Los Angeles\"|" /etc/myca/ca/openssl.cnf
+    sed -i "s|0.organizationName_default      = Default Company Ltd |0.organizationName_default      = \"CA Org Name\" |" /etc/myca/ca/openssl.cnf
+    sed -i "s|^commonName                      = Common Name|commonName                      = \"CA NAME\"|" /etc/myca/ca/openssl.cnf
+    sdiff -s -w200 /etc/pki/tls/openssl.cnf /etc/myca/ca/openssl.cnf
+    cp /dev/null index.txt
+    cp /dev/null index.txt.attr
+    echo 01 > serial
+    echo 01 > crlnumber
+    STUNNEL_CAHOSTNAME=$(echo $STUNNEL_HOSTNAME | awk -F '.' '{print "*."$2"."$3}')
+    pwgen -1cnys 21 > passphrase.txt
+    openssl ecparam -out /etc/myca/ca/private/ca.key -name prime256v1 -genkey
+    openssl req -new -key /etc/myca/ca/private/ca.key -sha256 -nodes -out /etc/myca/ca/ca.csr -passout file:passphrase.txt -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_CAHOSTNAME}" -extensions v3_ca
+    openssl req -x509 -days ${STUNNEL_CACERTEXPIRY} -config /etc/myca/ca/openssl.cnf -in /etc/myca/ca/ca.csr -key /etc/myca/ca/private/ca.key -out /etc/myca/ca/ca.crt
+    echo
+    openssl x509 -in /etc/myca/ca/ca.crt -text -noout
+    echo
+    chmod 0400 /etc/myca/ca/private/ca.key
+    cat /etc/myca/ca/private/ca.key > /etc/myca/ca/private/ca.pem
+    echo "" >> /etc/myca/ca/private/ca.pem
+    cat /etc/myca/ca/ca.crt >> /etc/myca/ca/private/ca.pem
+    echo
+    echo "ca private key: /etc/myca/ca/private/ca.key"
+    echo "ca cert: /etc/myca/ca/ca.crt"
+    echo "ca cert pem:  /etc/myca/ca/private/ca.pem"
+    echo "ca config:  /etc/myca/ca/openssl.cnf"
+    echo
+
+#openssl x509 -req -days ${STUNNEL_CACERTEXPIRY} -in /etc/myca/ca/ca.csr -CA /etc/myca/ca/ca.crt -CAkey /etc/myca/ca/private/ca.key -CAcreateserial -out /etc/myca/ca/ca.crt
+
     # server
     openssl ecparam -out server.key -name prime256v1 -genkey
     openssl req -new -key server.key -sha256 -nodes -out server.csr -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
-    openssl req -x509 -nodes -days ${STUNNEL_CERTEXPIRY} -in server.csr -key server.key -out server.crt
+    openssl x509 -req -days ${STUNNEL_CERTEXPIRY} -in server.csr -CA /etc/myca/ca/ca.crt -CAkey /etc/myca/ca/private/ca.key -CAcreateserial -out server.crt
+    echo
     openssl x509 -in server.crt -text -noout
+    echo
     chmod 0600 server.key
     cat server.key > server.pem
     echo "" >> server.pem
     cat server.crt >> server.pem
+    chmod 0600 server.pem
+    echo
+    echo "server private key: /etc/stunnel/server.key"
+    echo "server cert: /etc/stunnel/server.crt"
+    echo "server cert pem: /etc/stunnel/server.pem"
+    echo "server csr:  /etc/stunnel/server.csr"
+    # Create dhparam
+    echo
+    echo "openssl dhparam -out server-dhparam.pem 2048"
+    openssl dhparam -out server-dhparam.pem 2048
+    cat server-dhparam.pem >> /etc/stunnel/server.pem
+    echo
 
     # client
     openssl ecparam -out client.key -name prime256v1 -genkey
     openssl req -new -key client.key -sha256 -nodes -out client.csr -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
-    openssl req -x509 -nodes -days ${STUNNEL_CERTEXPIRY} -in client.csr -key client.key -out client.crt
+    openssl x509 -req -days ${STUNNEL_CERTEXPIRY} -in client.csr -CA /etc/myca/ca/ca.crt -CAkey /etc/myca/ca/private/ca.key -CAcreateserial -out client.crt
+    echo
     openssl x509 -in client.crt -text -noout
+    echo
     chmod 0600 client.key
     cat client.key > client.pem
     echo "" >> client.pem
     cat client.crt >> client.pem
+    chmod 0600 client.pem
+    echo
+    echo "client private key: /etc/stunnel/client.key"
+    echo "client cert: /etc/stunnel/client.crt"
+    echo "client cert pem: /etc/stunnel/client.pem"
+    echo "client csr:  /etc/stunnel/client.csr"
+    # Create dhparam
+    echo
+    echo "openssl dhparam -out client-dhparam.pem 2048"
+    openssl dhparam -out client-dhparam.pem 2048
+    cat client-dhparam.pem >> /etc/stunnel/server.pem
+    echo
   else
+    # ca at /etc/myca/ca/root-ca
+    mkdir -p /etc/myca/ca
+    cd /etc/myca/ca
+    mkdir -p private db crl certs newcerts
+    chmod 700 private
+    \cp -af /etc/pki/tls/openssl.cnf /etc/myca/ca/openssl.cnf
+    sed -i 's|= /etc/pki/CA|= /etc/myca/ca|' /etc/myca/ca/openssl.cnf
+    sed -i "s|= XX|= US|" /etc/myca/ca/openssl.cnf
+    sed -i "s|#stateOrProvinceName_default    = Default Province|stateOrProvinceName_default    = California|" /etc/myca/ca/openssl.cnf
+    sed -i "s|localityName_default            = Default City|localityName_default            = \"Los Angeles\"|" /etc/myca/ca/openssl.cnf
+    sed -i "s|0.organizationName_default      = Default Company Ltd |0.organizationName_default      = \"CA Org Name\" |" /etc/myca/ca/openssl.cnf
+    sed -i "s|^commonName                      = Common Name|commonName                      = \"CA NAME\"|" /etc/myca/ca/openssl.cnf
+    sdiff -s -w200 /etc/pki/tls/openssl.cnf /etc/myca/ca/openssl.cnf
+    cp /dev/null index.txt
+    cp /dev/null index.txt.attr
+    echo 01 > serial
+    echo 01 > crlnumber
+    STUNNEL_CAHOSTNAME=$(echo $STUNNEL_HOSTNAME | awk -F '.' '{print "*."$2"."$3}')
+    pwgen -1cnys 21 > passphrase.txt
+    openssl genrsa -out /etc/myca/ca/private/ca.key 2048
+    openssl req -new -key /etc/myca/ca/private/ca.key -sha256 -nodes -out /etc/myca/ca/ca.csr -passout file:passphrase.txt -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_CAHOSTNAME}" -extensions v3_ca
+    openssl req -x509 -days ${STUNNEL_CACERTEXPIRY} -config /etc/myca/ca/openssl.cnf -in /etc/myca/ca/ca.csr -key /etc/myca/ca/private/ca.key -out /etc/myca/ca/ca.crt
+    echo
+    openssl x509 -in /etc/myca/ca/ca.crt -text -noout
+    echo
+    chmod 0400 /etc/myca/ca/private/ca.key
+    cat /etc/myca/ca/private/ca.key > /etc/myca/ca/private/ca.pem
+    echo "" >> /etc/myca/ca/private/ca.pem
+    cat /etc/myca/ca/ca.crt >> /etc/myca/ca/private/ca.pem
+    echo
+    echo "ca private key: /etc/myca/ca/private/ca.key"
+    echo "ca cert: /etc/myca/ca/ca.crt"
+    echo "ca cert pem:  /etc/myca/ca/private/ca.pem"
+    echo "ca config:  /etc/myca/ca/openssl.cnf"
+    echo
+
     # server
     openssl genrsa -out server.key 2048
     openssl req -new -key server.key -sha256 -nodes -out server.csr -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
-    openssl req -x509 -nodes -days ${STUNNEL_CERTEXPIRY} -in server.csr -key server.key -out server.crt
+    openssl x509 -req -days ${STUNNEL_CERTEXPIRY} -in server.csr -CA /etc/myca/ca/ca.crt -CAkey /etc/myca/ca/private/ca.key -CAcreateserial -out server.crt
+    echo
     openssl x509 -in server.crt -text -noout
+    echo
     chmod 0600 server.key
     cat server.key > server.pem
     echo "" >> server.pem
     cat server.crt >> server.pem
+    chmod 0600 server.pem
+    echo
+    echo "server private key: /etc/stunnel/server.key"
+    echo "server cert: /etc/stunnel/server.crt"
+    echo "server cert pem: /etc/stunnel/server.pem"
+    echo "server csr:  /etc/stunnel/server.csr"
+    # Create dhparam
+    echo
+    echo "openssl dhparam -out server-dhparam.pem 2048"
+    openssl dhparam -out server-dhparam.pem 2048
+    cat server-dhparam.pem >> /etc/stunnel/server.pem
+    echo
 
     # client
     openssl genrsa -out client.key 2048
     openssl req -new -key client.key -sha256 -nodes -out client.csr -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
-    openssl req -x509 -nodes -days ${STUNNEL_CERTEXPIRY} -in client.csr -key client.key -out client.crt
+    openssl x509 -req -days ${STUNNEL_CERTEXPIRY} -in client.csr -CA /etc/myca/ca/ca.crt -CAkey /etc/myca/ca/private/ca.key -CAcreateserial -out client.crt
+    echo
     openssl x509 -in client.crt -text -noout
+    echo
     chmod 0600 client.key
     cat client.key > client.pem
     echo "" >> client.pem
     cat client.crt >> client.pem
+    chmod 0600 client.pem
+    echo
+    echo "client private key: /etc/stunnel/client.key"
+    echo "client cert: /etc/stunnel/client.crt"
+    echo "client cert pem: /etc/stunnel/client.pem"
+    echo "client csr:  /etc/stunnel/client.csr"
+    # Create dhparam
+    echo
+    echo "openssl dhparam -out client-dhparam.pem 2048"
+    openssl dhparam -out client-dhparam.pem 2048
+    cat client-dhparam.pem >> /etc/stunnel/server.pem
+    echo
   fi
   popd
 }
@@ -282,12 +415,20 @@ setup_stunnel() {
     openssl ecparam -out stunnel.key -name prime256v1 -genkey
     openssl req -new -key stunnel.key -sha256 -nodes -out stunnel.csr -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
     openssl req -x509 -nodes -days ${STUNNEL_CERTEXPIRY} -in stunnel.csr -key stunnel.key -out stunnel.crt
+    echo
     openssl x509 -in stunnel.crt -text -noout
+    echo
     chmod 0600 stunnel.key
     cat stunnel.key > stunnel.pem
     echo "" >> stunnel.pem
     cat stunnel.crt >> stunnel.pem
-    # rm -f stunnel.key stunnel.crt
+    chmod 0600 stunnel.pem
+    echo
+    echo "stunnel private key: /etc/stunnel/stunnel.key"
+    echo "stunnel cert: /etc/stunnel/stunnel.crt"
+    echo "stunnel cert pem: /etc/stunnel/stunnel.pem"
+    echo "stunnel csr:  /etc/stunnel/stunnel.csr"
+    echo
     popd
     echo "created ecdsa based /etc/stunnel/stunnel.pem"
   else
@@ -298,11 +439,20 @@ setup_stunnel() {
     openssl genrsa -out stunnel.key 2048
     openssl req -new -key stunnel.key -sha256 -nodes -out stunnel.csr -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${STUNNEL_HOSTNAME}"
     openssl req -x509 -nodes -days ${STUNNEL_CERTEXPIRY} -in stunnel.csr -key stunnel.key -out stunnel.crt
+    echo
     openssl x509 -in stunnel.crt -text -noout
+    echo
     chmod 0600 stunnel.key
     cat stunnel.key > stunnel.pem
     echo "" >> stunnel.pem
-    cat stunnel.crt >> stunnel.pem   
+    cat stunnel.crt >> stunnel.pem
+    chmod 0600 stunnel.pem
+    echo
+    echo "stunnel private key: /etc/stunnel/stunnel.key"
+    echo "stunnel cert: /etc/stunnel/stunnel.crt"
+    echo "stunnel cert pem: /etc/stunnel/stunnel.pem"
+    echo "stunnel csr:  /etc/stunnel/stunnel.csr"
+    echo
     popd
     echo "created rsa based /etc/stunnel/stunnel.pem"
   fi
@@ -327,8 +477,8 @@ setup_stunnel() {
     echo "Check Redis profile connection"
     # echo "echo -n | /opt/stunnel-dep/bin/openssl -CAfile /etc/stunnel/server.pem -cert /etc/stunnel/server.crt -key /etc/stunnel/server.key"
     # echo -n | /opt/stunnel-dep/bin/openssl -CAfile /etc/stunnel/server.pem -cert /etc/stunnel/server.crt -key /etc/stunnel/server.key
-    echo "echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/stunnel/stunnel.pem"
-    echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/stunnel/stunnel.pem
+    echo "echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/myca/ca/private/ca.pem -cert /etc/stunnel/server.crt -key /etc/stunnel/server.key"
+    echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/myca/ca/private/ca.pem -cert /etc/stunnel/server.crt -key /etc/stunnel/server.key
   fi
   echo
   systemctl status stunnelx.service
