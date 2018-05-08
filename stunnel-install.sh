@@ -151,7 +151,7 @@ pid = /var/run/stunnel/stunnel.pid
 #pid = /stunnel.pid
 output = /var/log/stunnel.log
 #output = /stunnel.log
-debug = 7
+#debug = 7
 #sslVersion = TLSv1.2
 
 setuid = stunnel
@@ -166,6 +166,8 @@ socket = r:TCP_NODELAY=1
 socket = l:SO_KEEPALIVE=1
 socket = r:SO_KEEPALIVE=1
 socket = a:SO_REUSEADDR=yes
+socket = l:SO_LINGER=1:10
+socket = r:SO_LINGER=1:10
 #compression = zlib
 
 [redis-server]
@@ -214,6 +216,8 @@ socket = r:TCP_NODELAY=1
 socket = l:SO_KEEPALIVE=1
 socket = r:SO_KEEPALIVE=1
 #socket = a:SO_REUSEADDR=yes
+socket = l:SO_LINGER=1:10
+socket = r:SO_LINGER=1:10
 #compression = zlib
 
 [redis-client]
