@@ -174,8 +174,8 @@ client = no
 accept = ${STUNNEL_REDISSERVERCACCEPTPORT}
 connect = 127.0.0.1:${STUNNEL_REDISSERVERCCONNECTPORT}
 cert = /etc/stunnel/server.pem
-CAfile = /etc/myca/ca/private/ca.pem
-verify = 3
+CAfile = /etc/stunnel/server.pem
+verify = 4
 sessionCacheSize = 50000
 sessionCacheTimeout = 300
 
@@ -185,8 +185,8 @@ client = yes
 accept = 127.0.0.1:${STUNNEL_REDISCLIENTCACCEPTPORT}
 connect = ${REDIS_REMOTEIP:-127.0.0.1}:${STUNNEL_REDISCLIENTCCONNECTPORT}
 cert = /etc/stunnel/server.pem
-CAfile = /etc/myca/ca/private/ca.pem
-verify = 3
+CAfile = /etc/stunnel/server.pem
+verify = 4
 sessionCacheSize = 50000
 sessionCacheTimeout = 300
 EOF
@@ -222,8 +222,8 @@ client = yes
 accept = 127.0.0.1:${STUNNEL_REDISCLIENTCACCEPTPORT}
 connect = ${REDIS_REMOTEIP:-127.0.0.1}:${STUNNEL_REDISCLIENTCCONNECTPORT}
 cert = /etc/stunnel/server.pem
-CAfile = /etc/myca/ca/private/ca.pem
-verify = 3
+CAfile = /etc/stunnel/server.pem
+verify = 4
 sessionCacheSize = 50000
 sessionCacheTimeout = 300
 EOF
@@ -289,11 +289,13 @@ setup_peercerts() {
     echo "server cert pem: /etc/stunnel/server.pem"
     echo "server csr:  /etc/stunnel/server.csr"
     # Create dhparam
-    echo
-    echo "openssl dhparam -out server-dhparam.pem 2048"
-    openssl dhparam -out server-dhparam.pem 2048
-    cat server-dhparam.pem >> /etc/stunnel/server.pem
-    echo
+    if [ ! -f server-dhparam.pem ]; then
+      echo
+      echo "openssl dhparam -out server-dhparam.pem 2048"
+      openssl dhparam -out server-dhparam.pem 2048
+      cat server-dhparam.pem >> /etc/stunnel/server.pem
+      echo
+    fi
 
     # client
     openssl ecparam -out client.key -name prime256v1 -genkey
@@ -313,11 +315,13 @@ setup_peercerts() {
     echo "client cert pem: /etc/stunnel/client.pem"
     echo "client csr:  /etc/stunnel/client.csr"
     # Create dhparam
-    echo
-    echo "openssl dhparam -out client-dhparam.pem 2048"
-    openssl dhparam -out client-dhparam.pem 2048
-    cat client-dhparam.pem >> /etc/stunnel/server.pem
-    echo
+    if [ ! -f client-dhparam.pem ]; then
+      echo
+      echo "openssl dhparam -out client-dhparam.pem 2048"
+      openssl dhparam -out client-dhparam.pem 2048
+      cat client-dhparam.pem >> /etc/stunnel/server.pem
+      echo
+    fi
   else
     # ca at /etc/myca/ca/root-ca
     mkdir -p /etc/myca/ca
@@ -373,11 +377,13 @@ setup_peercerts() {
     echo "server cert pem: /etc/stunnel/server.pem"
     echo "server csr:  /etc/stunnel/server.csr"
     # Create dhparam
-    echo
-    echo "openssl dhparam -out server-dhparam.pem 2048"
-    openssl dhparam -out server-dhparam.pem 2048
-    cat server-dhparam.pem >> /etc/stunnel/server.pem
-    echo
+    if [ ! -f server-dhparam.pem ]; then
+      echo
+      echo "openssl dhparam -out server-dhparam.pem 2048"
+      openssl dhparam -out server-dhparam.pem 2048
+      cat server-dhparam.pem >> /etc/stunnel/server.pem
+      echo
+    fi
 
     # client
     openssl genrsa -out client.key 2048
@@ -397,11 +403,13 @@ setup_peercerts() {
     echo "client cert pem: /etc/stunnel/client.pem"
     echo "client csr:  /etc/stunnel/client.csr"
     # Create dhparam
-    echo
-    echo "openssl dhparam -out client-dhparam.pem 2048"
-    openssl dhparam -out client-dhparam.pem 2048
-    cat client-dhparam.pem >> /etc/stunnel/server.pem
-    echo
+    if [ ! -f client-dhparam.pem ]; then
+      echo
+      echo "openssl dhparam -out client-dhparam.pem 2048"
+      openssl dhparam -out client-dhparam.pem 2048
+      cat client-dhparam.pem >> /etc/stunnel/server.pem
+      echo
+    fi
   fi
   popd
 }
@@ -477,8 +485,8 @@ setup_stunnel() {
     echo "Check Redis profile connection"
     # echo "echo -n | /opt/stunnel-dep/bin/openssl -CAfile /etc/stunnel/server.pem -cert /etc/stunnel/server.crt -key /etc/stunnel/server.key"
     # echo -n | /opt/stunnel-dep/bin/openssl -CAfile /etc/stunnel/server.pem -cert /etc/stunnel/server.crt -key /etc/stunnel/server.key
-    echo "echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/myca/ca/private/ca.pem -cert /etc/stunnel/server.crt -key /etc/stunnel/server.key"
-    echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/myca/ca/private/ca.pem -cert /etc/stunnel/server.crt -key /etc/stunnel/server.key
+    echo "echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/stunnel/server.pem -cert /etc/stunnel/server.crt -key /etc/stunnel/server.key"
+    echo -n | /opt/stunnel-dep/bin/openssl s_client -connect 127.0.0.1:7379 -CAfile /etc/stunnel/server.pem -cert /etc/stunnel/server.crt -key /etc/stunnel/server.key
   fi
   echo
   systemctl status stunnelx.service
